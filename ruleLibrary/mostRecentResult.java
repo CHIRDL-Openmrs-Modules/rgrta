@@ -86,13 +86,12 @@ public class mostRecentResult implements Rule
     			}	
     		}
     	}
-				System.out.println("Ultimate final result: "+finalResult);
-				System.out.println("Ultimate final result date: "+finalResult.getResultDate());
-
 		if(finalResult == null){
 			finalResult = Result.emptyResult();
 		}
-				
+		if (finalResult.toString()== null){
+			finalResult.setValueText(String.valueOf(finalResult.toNumber()));
+		}
 		return finalResult;
 	}
 	

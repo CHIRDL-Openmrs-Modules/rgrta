@@ -66,32 +66,33 @@ public class mostRecentResultWithAnswer implements Rule
     	Result finalResult = null;
     	int i = 2;
 		Object paramObj = "";
-    	
-    	while(paramObj != null){
-		        paramObj = parameters.get("param"+i);
-			    i++;
-		if(paramObj instanceof Result){
-    		results = (Result) parameters.get("param"+i);
+
+		while(paramObj != null){
+			paramObj = parameters.get("param"+i);
+			i++;
+			if(paramObj instanceof Result){
+				results = (Result) parameters.get("param"+i);
 			}else{
 
-			continue;
+				continue;
 			}
-    		if(results != null){
-    			for(Result result:results){
-    				if(answer != null&&answer.equalsIgnoreCase(result.toString())){
-    					Result matchedResult = result;
-    					if(finalResult==null||
-    						matchedResult.getResultDate().compareTo(finalResult.getResultDate())>0){
-    						finalResult = matchedResult;
-    					}
-    				}
-    			}
-    		}
-    	}
-                System.out.println("Ultimate final result: "+finalResult);
-				System.out.println("Ultimate final result date: "+finalResult.getResultDate());
+			if(results != null){
+				for(Result result:results){
+					if(answer != null&&answer.equalsIgnoreCase(result.toString())){
+						Result matchedResult = result;
+						if(finalResult==null||
+								matchedResult.getResultDate().compareTo(finalResult.getResultDate())>0){
+							finalResult = matchedResult;
+						}
+					}
+				}
+			}
+		}
 		if(finalResult == null){
 			finalResult = Result.emptyResult();
+		}
+		if (finalResult.toString()== null){
+			finalResult.setValueText(String.valueOf(finalResult.toNumber()));
 		}
 		return finalResult;
 	}
