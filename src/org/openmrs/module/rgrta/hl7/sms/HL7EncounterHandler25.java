@@ -95,7 +95,11 @@ public class HL7EncounterHandler25 extends
 	public String getInsuranceCode(Message message)
 	{
 		IN1 in1 = getIN1(message);
-		return in1.getInsurancePlanID().getIdentifier().getValue();
+		String insuranceCode = null;
+		if (in1 != null){
+			insuranceCode = in1.getInsurancePlanID().getIdentifier().getValue();
+		}
+		return insuranceCode;
 	}
 
 	public String getLocation(Message message)

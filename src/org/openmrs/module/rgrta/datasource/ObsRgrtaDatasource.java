@@ -3,6 +3,7 @@
  */
 package org.openmrs.module.rgrta.datasource;
 
+import java.util.HashMap;
 import java.util.Set;
 
 import org.openmrs.Obs;
@@ -35,6 +36,10 @@ public class ObsRgrtaDatasource extends ObsDataSource
 	
 	public void clearRegenObs() {
 	    ((LogicRgrtaObsDAO) this.getLogicObsDAO()).clearRegenObs();
+	}
+	
+	public HashMap<String, Set<Obs>> getRegenObs( Integer patientId) {
+	    return ((LogicRgrtaObsDAO) this.getLogicObsDAO()).getRegenObs(patientId);
 	}
 
 }

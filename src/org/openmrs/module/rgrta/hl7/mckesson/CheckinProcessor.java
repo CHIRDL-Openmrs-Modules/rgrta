@@ -61,9 +61,10 @@ public class CheckinProcessor extends AbstractTask
 			PipeParser parser = new PipeParser();
 			parser.setValidationContext(new NoValidation());
 			PatientHandler patientHandler = new PatientHandler();
-			PrinterLocationHL7Filter printerLocationHL7Filter = new PrinterLocationHL7Filter();
-			ArrayList<HL7Filter> filters = new ArrayList<HL7Filter>();
-			filters.add(printerLocationHL7Filter);
+			ArrayList<HL7Filter> filters = null;
+		//	PrinterLocationHL7Filter printerLocationHL7Filter = new PrinterLocationHL7Filter();
+			//ArrayList<HL7Filter> filters = new ArrayList<HL7Filter>();
+		//	filters.add(printerLocationHL7Filter);
 			HL7SocketHandler socketHandler = new HL7SocketHandler(parser,
 					patientHandler, new HL7ObsHandler25(), new HL7EncounterHandler25(),
 					new HL7PatientHandler25(),filters);

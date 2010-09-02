@@ -4,7 +4,7 @@
 package org.openmrs.module.rgrta.hl7.mckesson;
 
 import org.openmrs.PersonName;
-import org.openmrs.module.rgrta.hl7.ZPV;
+import org.openmrs.module.rgrta.hl7.ZVX;
 import org.openmrs.module.chirdlutil.util.Util;
 
 import ca.uhn.hl7v2.HL7Exception;
@@ -76,21 +76,22 @@ public class HL7EncounterHandler25 extends
 	}
 	
 	//for mckesson messages, printerLocation prefixed by 'PEDS'
-	@Override
+	//RGRTA has no ZPV segment
+	/*@Override
 	public String getPrinterLocation(Message message,String incomingMessageString)
 	{
 		ZPV zpv = new ZPV();
 		zpv.loadZPVSegment(incomingMessageString);
 		return zpv.getPrinterLocation();
 	}
-	
-	public String getInsurancePlan(Message message)
+	*/
+	/*public String getInsurancePlan(Message message)
 	{
 		IN1 in1 = getIN1(message);
 		return in1.getInsurancePlanID().getIdentifier().getValue();
-	}
+	}*/
 	
-	public String getInsuranceCarrier(Message message)
+	/*public String getInsuranceCarrier(Message message)
 	{
 		try
 		{
@@ -104,5 +105,5 @@ public class HL7EncounterHandler25 extends
 			logger.error(Util.getStackTrace(e));
 		}
 		return null;
-	}
+	}*/
 }

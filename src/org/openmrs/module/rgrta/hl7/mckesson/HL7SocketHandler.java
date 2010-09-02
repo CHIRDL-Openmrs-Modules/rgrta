@@ -15,9 +15,11 @@ import org.openmrs.Patient;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.context.Context;
+import org.openmrs.logic.LogicService;
 import org.openmrs.module.atd.hibernateBeans.ATDError;
 import org.openmrs.module.atd.hibernateBeans.Session;
 import org.openmrs.module.atd.service.ATDService;
+import org.openmrs.module.rgrta.datasource.ObsRgrtaDatasource;
 import org.openmrs.module.rgrta.hibernateBeans.Encounter;
 import org.openmrs.module.rgrta.service.EncounterService;
 import org.openmrs.module.chirdlutil.util.IOUtil;
@@ -124,10 +126,65 @@ public class HL7SocketHandler extends
 				return null;
 			}
 		}
+		
+		if (message instanceof ca.uhn.hl7v2.model.v22.message.ORU_R01) {
+			try {
+				ca.uhn.hl7v2.model.v22.message.ORU_R01 oru = (ca.uhn.hl7v2.model.v22.message.ORU_R01) message;
+				oru.getMSH().getVersionID().setValue("2.5");
+				incomingMessageString = this.parser.encode(message);
+				message = this.parser.parse(incomingMessageString);
+			} catch (Exception e) {
+				ATDError error = new ATDError("Fatal", "Hl7 Parsing",
+						"Error parsing the McKesson checkin hl7 "
+								+ e.getMessage(),
+						org.openmrs.module.chirdlutil.util.Util.getStackTrace(e),
+						new Date(), null);
+				ATDService atdService = Context.getService(ATDService.class);
+
+				atdService.saveError(error);
+				String mckessonParseErrorDirectory = IOUtil
+						.formatDirectoryName(adminService
+								.getGlobalProperty("Rgrta.mckessonParseErrorDirectory"));
+				if (mckessonParseErrorDirectory != null) {
+					String filename = "r" + Util.archiveStamp() + ".hl7";
+
+					FileOutputStream outputFile = null;
+
+					try {
+						outputFile = new FileOutputStream(
+								mckessonParseErrorDirectory + "/" + filename);
+					} catch (FileNotFoundException e1) {
+						this.log.error("Could not find file: "
+								+ mckessonParseErrorDirectory + "/" + filename);
+					}
+					if (outputFile != null) {
+						try {
+
+							ByteArrayInputStream input = new ByteArrayInputStream(
+									incomingMessageString.getBytes());
+							IOUtil.bufferedReadWrite(input, outputFile);
+							outputFile.flush();
+							outputFile.close();
+						} catch (Exception e1) {
+							try {
+								outputFile.flush();
+								outputFile.close();
+							} catch (Exception e2) {
+							}
+							this.log
+									.error("There was an error writing the dump file");
+							this.log.error(e1.getMessage());
+							this.log.error(Util.getStackTrace(e));
+						}
+					}
+				}
+				return null;
+			}
+		}
 
 		try {
 			incomingMessageString = this.parser.encode(message);
-			message.addNonstandardSegment("ZPV");
+			message.addNonstandardSegment("ZVX");
 		} catch (HL7Exception e) {
 			logger.error(e.getMessage());
 			logger.error(org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
@@ -158,7 +215,7 @@ public class HL7SocketHandler extends
 				incomingMessageString, p, encDate, newEncounter, provider,
 				parameters);
 		//store the encounter id with the session
-		Integer encounterId = newEncounter.getEncounterId();
+		Integer encounterId = encounter.getEncounterId();
 		getSession(parameters).setEncounterId(encounterId);
 		atdService.updateSession(getSession(parameters));
 		if (incomingMessageString == null)
@@ -189,14 +246,6 @@ public class HL7SocketHandler extends
 				appointmentTime = ((org.openmrs.module.rgrta.hl7.mckesson.HL7EncounterHandler25) this.hl7EncounterHandler)
 						.getAppointmentTime(message);
 
-				planCode = ((org.openmrs.module.rgrta.hl7.mckesson.HL7EncounterHandler25) this.hl7EncounterHandler)
-						.getInsurancePlan(message);
-
-				carrierCode = ((org.openmrs.module.rgrta.hl7.mckesson.HL7EncounterHandler25) this.hl7EncounterHandler)
-						.getInsuranceCarrier(message);
-
-				printerLocation = ((org.openmrs.module.rgrta.hl7.mckesson.HL7EncounterHandler25) this.hl7EncounterHandler)
-						.getPrinterLocation(message, incomingMessageString);
 			}
 
 		} catch (EncodingNotSupportedException e)
@@ -214,8 +263,7 @@ public class HL7SocketHandler extends
 		encounter = encounterService.getEncounter(encounterId);
 		Encounter RgrtaEncounter = (org.openmrs.module.rgrta.hibernateBeans.Encounter) encounter;
 
-		RgrtaEncounter.setInsurancePlanCode(planCode);
-		RgrtaEncounter.setInsuranceCarrierCode(carrierCode);
+		
 		RgrtaEncounter.setScheduledTime(appointmentTime);
 		RgrtaEncounter.setPrinterLocation(printerLocation);
 
@@ -253,5 +301,19 @@ public class HL7SocketHandler extends
 			parameters.put("session", session);
 		}
 		return session;
+	}
+	
+	@Override
+	public org.openmrs.Encounter checkin(Provider provider, Patient patient,
+			Date encounterDate, Message message, String incomingMessageString,
+			org.openmrs.Encounter newEncounter, HashMap<String,Object> parameters)
+	{
+		
+		Encounter enc =  (Encounter) super.checkin(provider, patient, encounterDate,  message,
+				incomingMessageString, newEncounter,parameters);
+		
+		
+		
+		return enc;
 	}
 }

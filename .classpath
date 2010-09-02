@@ -15,7 +15,7 @@
 	<classpathentry kind="lib" path="lib-common/commons-logging/commons-logging-1.0.4.jar"/>
 	<classpathentry kind="lib" path="lib-common/dom4j/dom4j-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib-common/ehcache/ehcache-1.2.4.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-0.5.jar" sourcepath="/hapi-0.5.1_source_core"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-0.5.jar" sourcepath="/HAPI/src/uhn/hl7v2/model"/>
 	<classpathentry kind="lib" path="lib-common/jakarta-taglibs/taglibs-page-1.1.jar"/>
 	<classpathentry kind="lib" path="lib-common/jakarta-taglibs/taglibs-request-1.1.jar"/>
 	<classpathentry kind="lib" path="lib-common/jakarta-taglibs/taglibs-response-1.1.jar"/>
@@ -96,7 +96,7 @@
 	<classpathentry kind="lib" path="lib-common/xstream/xstream-1.3.jar"/>
 	<classpathentry kind="lib" path="lib-common/openmrs-api-1.5.0.10396-dev.jar" sourcepath="/openmrs-chirdl/src"/>
 	<classpathentry kind="lib" path="lib-common/tests-openmrs-api-1.5.0.10396-dev.jar"/>
-	<classpathentry kind="lib" path="lib-common/web-openmrs-api-1.5.0.10396-dev.jar"/>
+	<classpathentry kind="lib" path="lib-common/web-openmrs-api-1.5.0.10396-dev.jar" sourcepath="/openmrs-chirdl/src/web"/>
 	<classpathentry kind="lib" path="lib-common/jibx/jibx-tools.jar"/>
 	<classpathentry kind="lib" path="lib-common/jibx/xmlpull_1_1_4.jar"/>
 	<classpathentry kind="lib" path="lib-common/jibx/org.eclipse.jdt.core.jar"/>
@@ -139,9 +139,9 @@
 	<classpathentry kind="lib" path="lib-common/axis2/XmlSchema-1.4.3.jar"/>
 	<classpathentry kind="lib" path="lib-common/axis2/XmlSchema-LICENSE.txt"/>
 	<classpathentry kind="lib" path="lib-common/atd-1.57.jar" sourcepath="/atd/src"/>
-	<classpathentry kind="lib" path="lib-common/chirdlutil-1.0.12.jar"/>
-	<classpathentry kind="lib" path="lib-common/dss-2.27.12.jar"/>
+	<classpathentry kind="lib" path="lib-common/dss-2.27.12.jar" sourcepath="/dss/src"/>
 	<classpathentry kind="lib" path="lib-common/rgccd-1.0.2.jar"/>
-	<classpathentry kind="lib" path="lib-common/sockethl7listener-1.3.21.jar"/>
+	<classpathentry kind="lib" path="lib-common/sockethl7listener-1.3.21.jar" sourcepath="/sockethl7listener/src"/>
+	<classpathentry kind="lib" path="lib-common/chirdlutil-1.0.14.jar" sourcepath="/chirdlutil/src"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

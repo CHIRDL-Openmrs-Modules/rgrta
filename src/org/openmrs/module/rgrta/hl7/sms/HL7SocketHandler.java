@@ -9,10 +9,10 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,34 +20,42 @@ import org.openmrs.Location;
 import org.openmrs.LocationTag;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
+import org.openmrs.Concept;
+import org.openmrs.ConceptName;
 import org.openmrs.PatientIdentifier;
-import org.openmrs.PatientIdentifierType;
 import org.openmrs.PersonAttribute;
 import org.openmrs.api.AdministrationService;
+import org.openmrs.api.ConceptService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
+import org.openmrs.logic.LogicService;
+import org.openmrs.module.atd.hibernateBeans.ATDError;
 import org.openmrs.module.atd.hibernateBeans.PatientState;
 import org.openmrs.module.atd.hibernateBeans.Session;
 import org.openmrs.module.atd.hibernateBeans.State;
 import org.openmrs.module.atd.service.ATDService;
+import org.openmrs.module.chirdlutil.util.IOUtil;
+import org.openmrs.module.chirdlutil.util.Util;
 import org.openmrs.module.rgrta.QueryKite;
 import org.openmrs.module.rgrta.QueryKiteException;
-import org.openmrs.module.atd.hibernateBeans.ATDError;
+import org.openmrs.module.rgrta.datasource.ObsRgrtaDatasource;
 import org.openmrs.module.rgrta.hibernateBeans.Encounter;
 import org.openmrs.module.rgrta.service.EncounterService;
-import org.openmrs.module.chirdlutil.util.Util;
-import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.sockethl7listener.HL7EncounterHandler;
 import org.openmrs.module.sockethl7listener.HL7Filter;
 import org.openmrs.module.sockethl7listener.HL7ObsHandler;
 import org.openmrs.module.sockethl7listener.HL7PatientHandler;
 import org.openmrs.module.sockethl7listener.PatientHandler;
+import org.openmrs.module.sockethl7listener.ProcessedMessagesManager;
 import org.openmrs.module.sockethl7listener.Provider;
+import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.app.ApplicationException;
 import ca.uhn.hl7v2.model.Message;
+import ca.uhn.hl7v2.model.v25.message.ADT_A01;
+import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.parser.EncodingNotSupportedException;
 import ca.uhn.hl7v2.parser.PipeParser;
 
@@ -156,29 +164,72 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 				return null;
 			}
 		}
+		
+		if (message instanceof ca.uhn.hl7v2.model.v22.message.ORU_R01) {
+			try {
+				ca.uhn.hl7v2.model.v22.message.ORU_R01 oru = (ca.uhn.hl7v2.model.v22.message.ORU_R01) message;
+				oru.getMSH().getVersionID().setValue("2.5");
+				incomingMessageString = this.parser.encode(message);
+				message = this.parser.parse(incomingMessageString);
+			} catch (Exception e) {
+				ATDError error = new ATDError("Fatal", "Hl7 Parsing",
+						"Error parsing the McKesson checkin hl7 "
+								+ e.getMessage(),
+						org.openmrs.module.chirdlutil.util.Util.getStackTrace(e),
+						new Date(), null);
+				
+				atdService.saveError(error);
+				String mckessonParseErrorDirectory = IOUtil
+						.formatDirectoryName(adminService
+								.getGlobalProperty("Rgrta.mckessonParseErrorDirectory"));
+				if (mckessonParseErrorDirectory != null) {
+					String filename = "r" + Util.archiveStamp() + ".hl7";
+
+					FileOutputStream outputFile = null;
+
+					try {
+						outputFile = new FileOutputStream(
+								mckessonParseErrorDirectory + "/" + filename);
+					} catch (FileNotFoundException e1) {
+						this.log.error("Could not find file: "
+								+ mckessonParseErrorDirectory + "/" + filename);
+					}
+					if (outputFile != null) {
+						try {
+
+							ByteArrayInputStream input = new ByteArrayInputStream(
+									incomingMessageString.getBytes());
+							IOUtil.bufferedReadWrite(input, outputFile);
+							outputFile.flush();
+							outputFile.close();
+						} catch (Exception e1) {
+							try {
+								outputFile.flush();
+								outputFile.close();
+							} catch (Exception e2) {
+							}
+							this.log
+									.error("There was an error writing the dump file");
+							this.log.error(e1.getMessage());
+							this.log.error(Util.getStackTrace(e));
+						}
+					}
+				}
+				return null;
+			}
+		}
 
 		try
 		{
 			incomingMessageString = this.parser.encode(message);
-			message.addNonstandardSegment("ZPV");
+			message.addNonstandardSegment("ZVX");
 		} catch (HL7Exception e)
 		{
 			logger.error(e.getMessage());
 			logger.error(org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
 		}
 
-		if (this.hl7EncounterHandler instanceof org.openmrs.module.rgrta.hl7.sms.HL7EncounterHandler25)
-		{
-			String printerLocation = ((org.openmrs.module.rgrta.hl7.sms.HL7EncounterHandler25) this.hl7EncounterHandler)
-					.getPrinterLocation(message,incomingMessageString);
-			
-			if (printerLocation != null && printerLocation.equals("0"))
-			{
-				// ignore this message because it is just kids getting shots
-				return message;
-			}
-		}
-
+		
 		return super.processMessage(message,parameters);
 	}
 
@@ -188,9 +239,30 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 	public Patient findPatient(Patient hl7Patient, Date encounterDate,HashMap<String,Object> parameters)
 	{
 		Patient resultPatient = null;
+		String mrn = null;
 
 		try
 		{
+			Patient matchedPatient = null;
+			Set<PatientIdentifier> identifiers = hl7Patient.getIdentifiers();
+			for (PatientIdentifier identifier : identifiers){
+				mrn = identifier.getIdentifier();
+				 matchedPatient = findPatient(mrn);
+				if (matchedPatient != null){
+					break;
+				}
+			}
+			if (matchedPatient == null)
+			{
+				resultPatient = createPatient(hl7Patient);
+			} else
+			{
+				resultPatient = updatePatient(matchedPatient, hl7Patient,
+						encounterDate);
+			}
+			
+			
+			/*
 			PatientIdentifier patientIdentifier = hl7Patient
 					.getPatientIdentifier();
 			if (patientIdentifier != null)
@@ -216,7 +288,18 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 				processAliasString(mrn, resultPatient);
 				
 				parameters.put("queryKiteAliasEnd",new java.util.Date());
-			}
+			} */
+			
+
+		    parameters.put("processCheckinHL7End",new java.util.Date());
+			
+		    parameters.put("queryKiteAliasStart",new java.util.Date());
+			
+			// merge alias medical record number patients with the matched
+			// patient
+			processAliasString(mrn, resultPatient);
+			
+			parameters.put("queryKiteAliasEnd",new java.util.Date());
 
 		} catch (RuntimeException e)
 		{
@@ -434,20 +517,63 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 		
 		return updatedPatient;
 	}
-
+	
+	
 	@Override
+	public org.openmrs.Encounter checkin(Provider provider, Patient patient,
+			Date encounterDate, Message message, String incomingMessageString,
+			org.openmrs.Encounter newEncounter, HashMap<String,Object> parameters){
+		
+		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
+		PatientService patientService = Context.getPatientService();
+		if (provider.createUserForProvider(provider) == null){
+			logger.error("Could not create a user or find an existing user for provider: firstname=" 
+					+ provider.getFirstName() + " lastname=" + provider.getLastName() + "id=" 
+					+ provider.getId()  );
+			return null;
+		}
+		 
+		Patient resultPatient = findPatient(patient,encounterDate,parameters);	
+		if (resultPatient == null || resultPatient.getPatientId() == null){
+			hl7ListService.setHl7Message(0, 0, incomingMessageString, false, false, this.getPort());
+			return null;
+		}
+		
+		Patient pat = patientService.getPatient(resultPatient.getPatientId());
+		
+		Encounter encounter = (org.openmrs.module.rgrta.hibernateBeans.Encounter) processEncounter(incomingMessageString,pat,
+					encounterDate, newEncounter, provider,parameters);
+		
+		if (encounter == null) return null;
+		
+		if (message instanceof ORU_R01 || message instanceof ADT_A01)
+		{
+			CreateObservation(encounter, true,message,0,0,encounter.getLocation(),resultPatient);
+			
+		}
+			
+		// trigger rules for NBS module and ATD module
+		ProcessedMessagesManager.messageProcessed(encounter);
+		
+		return encounter;
+	}
+
+/*	@Override
 	public org.openmrs.Encounter checkin(Provider provider, Patient patient,
 			Date encounterDate, Message message, String incomingMessageString,
 			org.openmrs.Encounter newEncounter, HashMap<String,Object> parameters)
 	{
+		ConceptService conceptService = Context.getConceptService();
 		Date processCheckinHL7Start = (Date) parameters.get("processCheckinHL7Start");
 		if(processCheckinHL7Start == null){
 			parameters.put("processCheckinHL7Start", new java.util.Date());
 		}
 		
+		
 		return super.checkin(provider, patient, encounterDate,  message,
 				incomingMessageString, newEncounter,parameters);
 	}
+	*/
 	
 
 	@Override
@@ -455,8 +581,50 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 			boolean saveToDatabase, Message message, int orderRep, int obxRep,
 			Location existingLoc, Patient resultPatient)
 	{
-		return super.CreateObservation(enc, saveToDatabase, message, orderRep, obxRep,
-				existingLoc, resultPatient);
+		ConceptService cs = Context.getConceptService();
+		LogicService logicService = Context.getLogicService();
+		
+		
+		ObsRgrtaDatasource xmlDatasource = (ObsRgrtaDatasource) logicService
+		.getLogicDataSource("RMRS");
+		
+
+		try {
+			if (enc != null){
+			
+				if (resultPatient.getPatientIdentifier() != null){
+					String  mrn = resultPatient.getPatientIdentifier().getIdentifier();
+					String incomingMessageString = this.parser.encode(message);
+					xmlDatasource.parseHL7ToObs(incomingMessageString,
+						enc.getPatientId(),mrn);
+						Obs obs = new Obs();
+					
+					
+				}
+			}
+		} catch (HL7Exception e) {
+			
+			e.printStackTrace();
+		}
+		
+
+		if (message instanceof ca.uhn.hl7v2.model.v25.message.ORU_R01){
+			
+			
+			HashMap<String, Set<Obs>> regenObsMap = 
+				xmlDatasource.getRegenObs(resultPatient.getPatientId());
+			String conceptName = "DIABETES_COHORT";
+			Obs newObs = CreateObservation(enc, resultPatient, conceptName, 
+					"TRUE");
+			Set<Obs> obs = new HashSet<Obs>();
+			obs.add(newObs);
+			regenObsMap.put(conceptName,obs );
+		
+		//	Util.saveObs(enc.getPatient(), cs.getConceptByName("DIABETES_COHORT"), 
+		//		enc.getEncounterId(), "TRUE");
+		}
+		
+		return null;
 	}
 
 	@Override
@@ -501,9 +669,6 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 
 				insuranceCode = ((org.openmrs.module.rgrta.hl7.sms.HL7EncounterHandler25) this.hl7EncounterHandler)
 						.getInsuranceCode(message);
-
-				printerLocation = ((org.openmrs.module.rgrta.hl7.sms.HL7EncounterHandler25) this.hl7EncounterHandler)
-						.getPrinterLocation(message, incomingMessageString);
 
 				if (insuranceCode != null)
 				{
@@ -566,6 +731,8 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 					atdService.updatePatientState(patientState);
 				
 					encounterService.saveEncounter(RgrtaEncounter);
+					
+					
 			}
 		} catch (EncodingNotSupportedException e)
 		{
@@ -579,6 +746,21 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 
 		return encounter;
 	}
+	
+	public Obs CreateObservation(org.openmrs.Encounter enc,
+			Patient resultPatient, String conceptName, String value)
+	{
+		Obs obs = new Obs();
+		org.openmrs.Concept concept = new org.openmrs.Concept();
+		concept.addName(new ConceptName(conceptName, null));
+		obs.setConcept(concept);
+		obs.setValueText(value);
+		obs.setDateCreated(new Date());
+		obs.setPerson(resultPatient);
+		
+		return obs;
+	}
+	
 	
 	
 

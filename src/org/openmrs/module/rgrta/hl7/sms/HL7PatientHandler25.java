@@ -157,7 +157,7 @@ public class HL7PatientHandler25 extends
 			stIdent = id.getValue();
 			ST checkDigitST = ident.getCheckDigit();
 
-			if (checkDigitST != null)
+			if ( checkDigitST == null || checkDigitST.getValue() != null)
 			{
 				String checkDigit = checkDigitST.getValue();
 				stIdent += "-" + checkDigit;

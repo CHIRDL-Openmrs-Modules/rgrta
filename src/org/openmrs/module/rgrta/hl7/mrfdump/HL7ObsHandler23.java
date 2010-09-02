@@ -56,10 +56,19 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 	{
 		return oru.getMSH();
 	}
+	public static MSH getMSH(ADT_A01 adt)
+	{
+		return adt.getMSH();
+	}
 
 	public static PID getPID(ORU_R01 oru)
 	{
 		return oru.getRESPONSE().getPATIENT().getPID();
+	}
+	
+	public static PID getPID(ADT_A01 adt)
+	{
+		return  adt.getPID();
 	}
 
 	private OBX getOBX(Message message, int orderRe, int obRep)
@@ -67,6 +76,11 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 		if (message instanceof ORU_R01)
 		{
 			return getOBX((ORU_R01) message, orderRe, obRep);
+		}
+		
+		if (message instanceof ADT_A01)
+		{
+			return getOBX((ADT_A01) message);
 		}
 		return null;
 	}
@@ -80,6 +94,22 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 			obx = oru.getRESPONSE().getORDER_OBSERVATION(orderRep)
 					.getOBSERVATION(obRep).getOBX();
 		} catch (HL7Exception e)
+		{
+			log.error(e.getMessage());
+			log.error(org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
+		}
+
+		return obx;
+	}
+	
+	private OBX getOBX(ADT_A01 adt)
+	{
+
+		OBX obx = null;
+		try
+		{
+			obx = adt.getOBX();
+		} catch (Exception e)
 		{
 			log.error(e.getMessage());
 			log.error(org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
@@ -225,13 +255,18 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 
 	public String getSendingFacility(Message message)
 	{
-		if (!(message instanceof ORU_R01))
+		if (message instanceof ORU_R01)
 		{
-			return null;
+			MSH msh = getMSH((ORU_R01) message);
+			return msh.getSendingFacility().getNamespaceID().getValue();
+		}
+		if (message instanceof ADT_A01)
+		{
+			MSH msh = getMSH( (ADT_A01) message);
+			return msh.getSendingFacility().getNamespaceID().getValue();
 		}
 
-		MSH msh = getMSH((ORU_R01) message);
-		return msh.getSendingFacility().getNamespaceID().getValue();
+		return null;
 	}
 
 	public Date getDateStarted(Message message)
@@ -240,6 +275,7 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 		{
 			return null;
 		}
+		
 		// OBR segment --Observation start time
 		TS tsObsvStartDateTime = getOBR((ORU_R01) message, 0)
 				.getObservationDateTime();
@@ -469,6 +505,15 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 				}
 			}
 
+			if (message instanceof ADT_A01){
+				ADT_A01 adt = (ADT_A01) message;
+				OBX obx = adt.getOBX();
+				Obs obs = hl7SocketHandler.CreateObservation(null,
+						false, message, 0, 0, existingLoc,
+						resultPatient);
+				if (obs != null) allObs.add(obs);
+			}
+			
 			if (message instanceof ORU_R01)
 			{
 				ORU_R01 oru = (ORU_R01) message;
@@ -489,6 +534,8 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 						allObs.add(obs);
 					}
 				}
+				
+				hl7SocketHandler.CreateObservation(null, false, message, 0, 0, existingLoc, resultPatient);
 			}
 		}
 		return allObs;

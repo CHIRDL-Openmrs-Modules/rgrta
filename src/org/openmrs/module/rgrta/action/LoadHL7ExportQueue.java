@@ -5,6 +5,7 @@ package org.openmrs.module.rgrta.action;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,6 +14,7 @@ import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.atd.StateManager;
 import org.openmrs.module.atd.action.ProcessStateAction;
+import org.openmrs.module.atd.hibernateBeans.FormInstance;
 import org.openmrs.module.atd.hibernateBeans.PatientState;
 import org.openmrs.module.atd.hibernateBeans.Session;
 import org.openmrs.module.atd.hibernateBeans.State;
@@ -42,129 +44,49 @@ public class LoadHL7ExportQueue implements ProcessStateAction
 	{
 		//lookup the patient again to avoid lazy initialization errors
 		PatientService patientService = Context.getPatientService();
-		ChirdlUtilService chirdlUtilService = Context.getService(ChirdlUtilService.class);
+		RgrtaService RgrtaService = Context
+		.getService(RgrtaService.class);
+		ATDService atdService = Context
+		.getService(ATDService.class);
+		
 		Integer patientId = patient.getPatientId();
 		patient = patientService.getPatient(patientId);
-		
 		Integer locationTagId = patientState.getLocationTagId();
 		Integer locationId = patientState.getLocationId();
 		
+
+		//Get existing form_id.
+		//If not a form, form id will be null in export map table.
+		//Default config location will have the format for non-form;
 		
-		
-		RgrtaService RgrtaService = Context
-				.getService(RgrtaService.class);
-		ATDService atdService = Context
-				.getService(ATDService.class);
+		Integer formId = (Integer) parameters.get("formId");
+		String formIdString = String.valueOf(formId);
 		State currState = patientState.getState();
 		Integer sessionId = patientState.getSessionId();
-		
 		Session session = atdService.getSession(sessionId);
 		Integer encounterId = session.getEncounterId();
-		
-		try {
-			if (patientState.getState().getName().equals("Export POC")) {
-				//TODO:add encounter to queue
-				RgrtaHL7Export pocExport = new RgrtaHL7Export();
-				pocExport.setDateInserted(new Date());
-				pocExport.setEncounterId(encounterId);
-				pocExport.setSessionId(sessionId);
-				pocExport.setVoided(false);
-				pocExport.setStatus(1);
-				RgrtaHL7ExportMap POCmap = new RgrtaHL7ExportMap();
-				LocationTagAttributeValue  POCTagValue = 
-					chirdlUtilService.getLocationTagAttributeValue(locationTagId, "POCConceptMapLocation", 
-						locationId);
-				if (POCTagValue != null && !POCTagValue.equals("")) {
-					POCTagValue.getValue();
-					RgrtaHL7Export insertedExport = RgrtaService.insertEncounterToHL7ExportQueue(pocExport);
-					POCmap.setValue(String.valueOf(POCTagValue.getLocationTagAttributeValueId()));
-					POCmap.setHl7ExportQueueId(insertedExport.getQueueId());
-					POCmap.setDateInserted(new Date());
-					POCmap.setVoided(false);
-					RgrtaService.saveHL7ExportMap(POCmap);
-				}
-				
-				
 
-				RgrtaHL7ExportMap psftiffMap = new RgrtaHL7ExportMap();
-				LocationTagAttributeValue  psftiffTagValue = 
-					chirdlUtilService.getLocationTagAttributeValue(locationTagId, "PSFTiffConceptMapLocation", 
-						locationId);
-				psftiffTagValue.getValue();
-				
-				if (psftiffTagValue != null && !psftiffTagValue.equals("")){
-					RgrtaHL7Export exportpsf = new RgrtaHL7Export();
-					exportpsf.setDateInserted(new Date());
-					exportpsf.setEncounterId(encounterId);
-					exportpsf.setSessionId(sessionId);
-					exportpsf.setVoided(false);
-					exportpsf.setStatus(1);
-					RgrtaHL7Export insertedExport = RgrtaService.insertEncounterToHL7ExportQueue(exportpsf);
-					psftiffMap.setValue(String.valueOf(psftiffTagValue.getLocationTagAttributeValueId()));
-					psftiffMap.setHl7ExportQueueId(insertedExport.getQueueId());
-					psftiffMap.setDateInserted(new Date());
-					psftiffMap.setVoided(false);
-					RgrtaService.saveHL7ExportMap(psftiffMap);
-					
-				}
-				
-				RgrtaHL7ExportMap pwstiffMap = new RgrtaHL7ExportMap();
-				LocationTagAttributeValue  pwstiffTagValue = 
-					chirdlUtilService.getLocationTagAttributeValue(locationTagId, "PWSTiffConceptMapLocation", 
-						locationId);
-				pwstiffTagValue.getValue();
-				
-				if (pwstiffTagValue != null && !pwstiffTagValue.equals("")){
-					RgrtaHL7Export exportpws = new RgrtaHL7Export();
-					exportpws.setDateInserted(new Date());
-					exportpws.setEncounterId(encounterId);
-					exportpws.setSessionId(sessionId);
-					exportpws.setVoided(false);
-					exportpws.setStatus(1);
-					RgrtaHL7Export insertedExport = RgrtaService.insertEncounterToHL7ExportQueue(exportpws);
-					pwstiffMap.setValue(String.valueOf(pwstiffTagValue.getLocationTagAttributeValueId()));
-					pwstiffMap.setHl7ExportQueueId(insertedExport.getQueueId());
-					pwstiffMap.setDateInserted(new Date());
-					pwstiffMap.setVoided(false);
-					RgrtaService.saveHL7ExportMap(pwstiffMap);
-					
-				}
-				
+		try {
 			
-				
-				
-			}
-			if (patientState.getState().getName().equals("Export Vitals")){
-				
-				
-				RgrtaHL7ExportMap vitalsMap = new RgrtaHL7ExportMap();
-				LocationTagAttributeValue  tagValue = 
-					chirdlUtilService.getLocationTagAttributeValue(locationTagId, "VitalsConceptMapLocation", 
-						locationId);
-				if (tagValue != null && !tagValue.equals("")){
-					//TODO:add encounter to queue
-					RgrtaHL7Export vitalsExport = new RgrtaHL7Export();
-					vitalsExport.setDateInserted(new Date());
-					vitalsExport.setEncounterId(encounterId);
-					vitalsExport.setSessionId(sessionId);
-					vitalsExport.setVoided(false);
-					vitalsExport.setStatus(1);
-					RgrtaHL7Export insertedExport = RgrtaService.insertEncounterToHL7ExportQueue(vitalsExport);
-					tagValue.getValue();
-					vitalsMap.setValue(String.valueOf(tagValue.getLocationTagAttributeValueId()));
-					vitalsMap.setHl7ExportQueueId(insertedExport.getQueueId());
-					vitalsMap.setDateInserted(new Date());
-					vitalsMap.setVoided(false);
-					RgrtaService.saveHL7ExportMap(vitalsMap);
-					
-				}
-				
-			}
+			RgrtaHL7Export export = new RgrtaHL7Export();
+			export.setDateInserted(new Date());
+			export.setEncounterId(encounterId);
+			export.setSessionId(sessionId);
+			export.setVoided(false);
+			export.setStatus(1);
+			RgrtaHL7ExportMap exportMap = new RgrtaHL7ExportMap();
+			RgrtaHL7Export insertedExport = RgrtaService.insertEncounterToHL7ExportQueue(export);
+			exportMap.setValue(formIdString);
+			exportMap.setHl7ExportQueueId(insertedExport.getQueueId());
+			exportMap.setDateInserted(new Date());
+			exportMap.setVoided(false);
+			RgrtaService.saveHL7ExportMap(exportMap);
+			
 		} finally{
-			
-		StateManager.endState(patientState);
-		RgrtaStateActionHandler.changeState(patient, sessionId, currState,stateAction,
-				parameters,locationTagId,locationId);
+
+			StateManager.endState(patientState);
+			RgrtaStateActionHandler.changeState(patient, sessionId, currState,stateAction,
+					parameters,locationTagId,locationId);
 		}
 	}
 

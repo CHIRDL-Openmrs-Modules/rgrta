@@ -20,17 +20,17 @@ Data:
 mode:=read {mode from Parameters};
 If (mode = PRODUCE) then
 
-hba1c_1:= read last {Glycated Hb-Total (Hplc) from RMRS} Where it Occurred Within Past 6 Months;
-hba1c_2:= read last {Hgb A1C Bld Qn HPLC from RMRS} Where it Occurred Within Past 6 Months;
-hba1c_3:= read last {Glycated Hgb %	from RMRS} Where it Occurred Within Past 6 Months;
-hba1c_4:= read last {Glycos Hgb A-1% from RMRS} Where it Occurred Within Past 6 Months;
-hba1c_5:= read last {Hgb A1C Bld Qn (Meth) from RMRS} Where it Occurred Within Past 6 Months;
-hba1c_6:= read last {Hgb A1c Bld Qn (POC)	from RMRS} Where it Occurred Within Past 6 Months;
-hba1c_7:= read last {Hgb A1c Bld Qn IA from RMRS} Where it Occurred Within Past 6 Months;
-hba1c_8:= read last {Hgb Glycosylated (VA) from RMRS} Where it Occurred Within Past 6 Months;
-hba1c_9:= read last {HgbA1C % Ser EIA from RMRS} Where it Occurred Within Past 6 Months;
+hba1c_1:= read last {Glycated Hb-Total (Hplc) from RMRS} Where it Occurred Within Past 1 Years;
+hba1c_2:= read last {Hgb A1C Bld Qn HPLC from RMRS} Where it Occurred Within Past 1 Years;
+hba1c_3:= read last {Glycated Hgb %	from RMRS} Where it Occurred Within Past 1 Years;
+hba1c_4:= read last {Glycos Hgb A-1% from RMRS} Where it Occurred Within Past 1 Years;
+hba1c_5:= read last {Hgb A1C Bld Qn (Meth) from RMRS} Where it Occurred Within Past 1 Years;
+hba1c_6:= read last {Hgb A1c Bld Qn (POC)	from RMRS}Where it Occurred Within Past 1 Years;
+hba1c_7:= read last {Hgb A1c Bld Qn IA from RMRS} Where it Occurred Within Past 1 Years;
+hba1c_8:= read last {Hgb Glycosylated (VA) from RMRS} Where it Occurred Within Past 1 Years;
+hba1c_9:= read last {HgbA1C % Ser EIA from RMRS} Where it Occurred Within Past 1 Years;
 
-hba1c_10:= read {Hosp Procedures from RMRS} Where it Occurred Within Past 6 Months;
+hba1c_10:= read {Hosp Procedures from RMRS} Where it Occurred Within Past 1 Years;
 
 endif
 ;;

@@ -10,6 +10,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -686,6 +687,24 @@ public class LogicRgrtaObsDAO implements LogicObsDAO
 
 		return regenObsById.get(conceptName);
 	}
+	
+	public HashMap<String, Set<Obs>> getRegenObs(Integer patientId)
+	{
+		if (patientId == null)
+		{
+			return new HashMap<String, Set<Obs>>();
+		}
+
+		HashMap<String, Set<Obs>> regenObsById = this.regenObs
+				.get(patientId);
+		
+		if (regenObsById == null)
+		{
+			return new HashMap<String, Set<Obs>>();
+		}
+
+		return regenObsById;
+	}
 
 	public void deleteRegenObsByPatientId(Integer patientId)
 	{
@@ -917,7 +936,9 @@ public class LogicRgrtaObsDAO implements LogicObsDAO
 					obsByConcept.put(currConceptName, obs);
 				}
 				obs.add(currObs);
+				System.out.print("this is a test line");
 			}
+			System.out.print("after obs loaded");
 		} catch (Exception e)
 		{
 			this.log.error("Error processing MRF dump obs.");

@@ -26,6 +26,7 @@ import ca.uhn.hl7v2.model.v23.datatype.IS;
 import ca.uhn.hl7v2.model.v23.datatype.ST;
 import ca.uhn.hl7v2.model.v23.datatype.XPN;
 import ca.uhn.hl7v2.model.v23.segment.PID;
+import ca.uhn.hl7v2.model.v23.message.ADT_A01;
 import ca.uhn.hl7v2.model.v23.message.ORU_R01;
 import ca.uhn.hl7v2.model.v23.datatype.TS;
 import ca.uhn.hl7v2.model.v23.datatype.XAD;
@@ -152,7 +153,7 @@ public class HL7PatientHandler23 implements HL7PatientHandler
 			stIdent = id.getValue();
 			ST checkDigitST = ident.getCheckDigit();
 
-			if (checkDigitST != null)
+			if (checkDigitST != null && checkDigitST.getValue() != null)
 			{
 				String checkDigit = checkDigitST.getValue();
 				stIdent += "-" + checkDigit;
@@ -167,6 +168,11 @@ public class HL7PatientHandler23 implements HL7PatientHandler
 		if (message instanceof ORU_R01)
 		{
 			return HL7ObsHandler23.getPID((ORU_R01) message);
+		}
+		
+		if (message instanceof ADT_A01)
+		{
+			return HL7ObsHandler23.getPID((ADT_A01) message);
 		}
 		
 		return null;
@@ -396,10 +402,11 @@ public class HL7PatientHandler23 implements HL7PatientHandler
 
 	public String[] getPatientIdentifierList(Message message)
 	{
-		if (!(message instanceof ORU_R01))
+		if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01) )
 		{
 			return null;
 		}
+
 
 		CX[] pIdentifierList = getPID(message)
 				.getPatientIDInternalID();

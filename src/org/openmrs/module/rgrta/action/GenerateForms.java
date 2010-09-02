@@ -12,9 +12,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Encounter;
 import org.openmrs.Form;
+import org.openmrs.Location;
 import org.openmrs.Patient;
+import org.openmrs.api.AdministrationService;
 import org.openmrs.api.EncounterService;
 import org.openmrs.api.FormService;
+import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.logic.LogicService;
@@ -27,20 +30,21 @@ import org.openmrs.module.atd.hibernateBeans.State;
 import org.openmrs.module.atd.hibernateBeans.StateAction;
 import org.openmrs.module.atd.service.ATDService;
 import org.openmrs.module.rgrta.RgrtaStateActionHandler;
-import org.openmrs.module.rgrta.MedicationListLookup;
 import org.openmrs.module.rgrta.datasource.ObsRgrtaDatasource;
 import org.openmrs.module.chirdlutil.hibernateBeans.LocationTagAttributeValue;
 import org.openmrs.module.chirdlutil.service.ChirdlUtilService;
 import org.openmrs.module.rgrta.hibernateBeans.Statistics;
 import org.openmrs.module.rgrta.service.RgrtaService;
 import org.openmrs.module.chirdlutil.util.IOUtil;
+import org.openmrs.module.chirdlutil.util.Util;
+import org.openmrs.module.dss.hibernateBeans.Rule;
 import org.openmrs.module.rgccd.Medication;
 
 /**
  * @author tmdugan
  * 
  */
-public class ProduceFormInstance implements ProcessStateAction
+public class GenerateForms implements ProcessStateAction
 {
 	private static Log log = LogFactory.getLog(RgrtaStateActionHandler.class);
 
@@ -55,8 +59,7 @@ public class ProduceFormInstance implements ProcessStateAction
 	public void processAction(StateAction stateAction, Patient patient,
 			PatientState patientState, HashMap<String, Object> parameters)
 	{
-		long totalTime = System.currentTimeMillis();
-		long startTime = System.currentTimeMillis();
+		
 		//lookup the patient again to avoid lazy initialization errors
 		PatientService patientService = Context.getPatientService();
 		Integer patientId = patient.getPatientId();
@@ -70,7 +73,10 @@ public class ProduceFormInstance implements ProcessStateAction
 		ATDService atdService = Context
 				.getService(ATDService.class);
 		ChirdlUtilService chirdlUtilService = Context.getService(ChirdlUtilService.class);
+		AdministrationService adminService = Context.getAdministrationService();
 
+		
+		String mode = "PRODUCE";
 		State currState = patientState.getState();
 		Integer sessionId = patientState.getSessionId();
 		
@@ -113,30 +119,6 @@ public class ProduceFormInstance implements ProcessStateAction
 		
 		FormService formService = Context.getFormService();
 		Form form = formService.getForm(formId);
-		startTime = System.currentTimeMillis();
-		if(form.getName().equals("PWS")){
-			List<Medication> drugs = MedicationListLookup.getMedicationList(patientId);
-			EncounterService encounterService = Context.getService(EncounterService.class);
-			Encounter encounter = encounterService.getEncounter(encounterId);
-			//if there is no drug list, call the ccd service again
-			//to get the drug list
-			if(drugs == null){
-				State queryMedListState = atdService.getStateByName("Query medication list");
-				PatientState state = atdService.addPatientState(patient, queryMedListState, 
-					sessionId, locationTagId,locationId);
-				try {
-	                MedicationListLookup.queryMedicationList(encounter,true);
-                }
-                catch (Exception e) {
-	               
-	                log.error("Medication Query failed", e);
-                }
-				state.setEndTime(new java.util.Date());
-				atdService.updatePatientState(patientState);
-			}
-			System.out.println("Produce: query medication list: "+(System.currentTimeMillis()-startTime));
-		}
-		startTime = System.currentTimeMillis();
 		
 		// write the form
 		FormInstance formInstance = atdService.addFormInstance(formId,
@@ -145,56 +127,57 @@ public class ProduceFormInstance implements ProcessStateAction
 		if(parameters == null){
 			parameters = new HashMap<String,Object>();
 		}
+		
+		parameters.put("sessionId", sessionId);
 		parameters.put("formInstance", formInstance);
-		parameters.put("formId", formId);
+		parameters.put("locationTagId", locationTagId);
+		EncounterService encounterService = Context.getEncounterService();
+		Encounter encounter = encounterService.getEncounter(encounterId);
+		parameters.put("locationId",locationId);
+		LocationService locationService = Context.getLocationService();
+		Location location = locationService.getLocation(locationId);
+		String locationName = null;
+		if(location != null){
+			locationName = location.getName();
+		}
+		parameters.put("location", locationName);
+		if(encounterId != null)
+		{
+			parameters.put("encounterId", encounterId);
+		}
+		
+		parameters.put("mode", mode);
 		patientState.setFormInstance(formInstance);
 		atdService.updatePatientState(patientState);
 		Integer formInstanceId = formInstance.getFormInstanceId();
-		String mergeDirectory = IOUtil
-				.formatDirectoryName(org.openmrs.module.atd.util.Util
-						.getFormAttributeValue(formId, "pendingMergeDirectory",
-								locationTagId, locationId));
-
-		String mergeFilename = mergeDirectory + formInstance.toString() + ".xml";
-		int maxDssElements = org.openmrs.module.rgrta.util.Util
-				.getMaxDssElements(formId, locationTagId, locationId);
 		
-		try {
-			FileOutputStream output = new FileOutputStream(mergeFilename);
-			startTime = System.currentTimeMillis();
-			rgrtaService.produce(output, patientState, patient, encounterId, formName, maxDssElements, sessionId);
-			startTime = System.currentTimeMillis();
-			output.flush();
-			output.close();
-		}
-		catch (IOException e) {
-			log.error("Could not produce merge xml for file: "+mergeFilename, e);
-		}
+		Rule rule = new Rule();
+		
+		rule.setTokenName("RTA");
+		rule.setParameters(parameters);
+		
+		String defaultPackagePrefix = Util.formatPackagePrefix(
+				adminService.getGlobalProperty("atd.defaultPackagePrefix"));
+		
+		String rulePackagePrefix = adminService.getGlobalProperty("dss.rulePackagePrefix");
+		
+		atdService.evaluateRule("RTA", patient, parameters,rulePackagePrefix);
+		
 		LogicService logicService = Context.getLogicService();
 
 		ObsRgrtaDatasource xmlDatasource = (ObsRgrtaDatasource) logicService
 				.getLogicDataSource("RMRS");
 
-		
+		// clear the in-memory obs from the MRF dump at the end of each
+		// produce state
+		xmlDatasource.deleteRegenObsByPatientId(patientId);
+
 		StateManager.endState(patientState);
-		System.out.println("Produce: Total time to produce "+form.getName()+": "+(System.currentTimeMillis()-totalTime));
 		RgrtaStateActionHandler.changeState(patient, sessionId, currState, stateAction, parameters,
 				locationTagId, locationId);
-		startTime = System.currentTimeMillis();
-		// update statistics
-		List<Statistics> statistics = rgrtaService.getStatByFormInstance(
-				formInstanceId, formName, locationId);
-
-		for (Statistics currStat : statistics)
-		{
-			currStat.setPrintedTimestamp(patientState.getEndTime());
-			rgrtaService.updateStatistics(currStat);
-		}
-		startTime = System.currentTimeMillis();
-		//if this is a PWS, clear the medication list query results
-		if(form.getName().equals("PWS")){
-			MedicationListLookup.removeMedicationList(patientId);
-		}
+		
+		
+		
 	}
 
 	public void changeState(PatientState patientState,

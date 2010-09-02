@@ -6,7 +6,7 @@
 	<!-- Rgrta Module Properties -->
 	<id>rgrta</id>
 	<name>Rgrta</name>
-	<version>0.1</version>
+	<version>0.2</version>
 	<package>org.openmrs.module.@MODULE_ID@</package>
 	<author>Meena Sheley</author>
 	<description>
@@ -23,7 +23,7 @@
    		<require_module version="1.57">org.openmrs.module.atd</require_module>
    		<require_module version="1.3.21">org.openmrs.module.sockethl7listener</require_module>
 		<require_module version="1.0.2">org.openmrs.module.rgccd</require_module>
-   		<require_module version="1.0.12">org.openmrs.module.chirdlutil</require_module>
+   		<require_module version="1.0.14">org.openmrs.module.chirdlutil</require_module>
 	</require_modules>
 	
 	<extension>

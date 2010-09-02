@@ -33,6 +33,7 @@ import org.openmrs.ConceptName;
 import org.openmrs.ConceptNumeric;
 import org.openmrs.ConceptSet;
 import org.openmrs.ConceptSource;
+import org.openmrs.Form;
 import org.openmrs.LocationTag;
 import org.openmrs.Location;
 import org.openmrs.Obs;
@@ -41,9 +42,11 @@ import org.openmrs.PatientIdentifier;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
+import org.openmrs.api.FormService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.atd.hibernateBeans.FormAttributeValue;
 import org.openmrs.module.atd.hibernateBeans.FormInstance;
 import org.openmrs.module.atd.hibernateBeans.PatientState;
 import org.openmrs.module.atd.service.ATDService;
@@ -139,6 +142,7 @@ public class HL7Exporter extends AbstractTask {
 		RgrtaService RgrtaService = Context.getService(RgrtaService.class);
 		ATDService atdService = Context.getService(ATDService.class);
 		EncounterService encounterService = Context.getService(EncounterService.class);
+		AdministrationService adminService = Context.getAdministrationService();
 		socketHandler = new HL7SocketHandler();
 		
 		String conceptCategory = "";
@@ -169,25 +173,36 @@ public class HL7Exporter extends AbstractTask {
 				Integer encId = export.getEncounterId();
 				Integer hl7ExportQueueId = export.getQueueId();
 				
+				Integer formId = getFormIdByExportQueueId(hl7ExportQueueId);
+				
+				
 				//Get the mapping files
-				String conceptMapFile = getRgrtaExportConceptMapByQueueId(hl7ExportQueueId);
+				/*String conceptMapFile = getRgrtaExportConceptMapByQueueId(hl7ExportQueueId);
 				if (conceptMapFile == null) {
 					export.setStatus(RgrtaService.getRgrtaExportStatusByName("concept_map_location_unknown"));
 					RgrtaService.saveRgrtaHL7Export(export);
 					continue;
-				}
+				}*/
 				
-				Document doc = getDocument(conceptMapFile);
+				/*Document doc = getDocument(conceptMapFile);
 				if (doc == null) {
 					
 					export.setStatus(RgrtaService.getRgrtaExportStatusByName("XML_parsing_error"));
 					RgrtaService.saveRgrtaHL7Export(export);
 					continue;
 				}
-				
+				*/
 				
 				//Get the hl7 config file
-				String configFileName = getFileLocation(encId);
+				String configFileName;
+				if (formId == null){
+					
+					configFileName = IOUtil.formatDirectoryName(adminService
+							.getGlobalProperty("rgrta.defaultHl7ConfigFileLocation"));
+					
+				}else {
+					configFileName = getConfigFileLocation( formId);
+				}
 				if (configFileName == null || configFileName.equalsIgnoreCase("") ) {
 					export.setStatus(RgrtaService.getRgrtaExportStatusByName("hl7_config_file_not_found"));
 					RgrtaService.saveRgrtaHL7Export(export);
@@ -197,8 +212,6 @@ public class HL7Exporter extends AbstractTask {
 				
 				//Construct the message
 				
-				Hashtable<String,String> mappings = this.loadHashTable(doc); 
-				conceptCategory = doc.getDocumentElement().getAttribute("category");
 				Properties hl7Properties = Util.getProps(configFileName);
 				if (hl7Properties ==null){
 					export.setStatus(RgrtaService.getRgrtaExportStatusByName("no_hl7_config_properties"));
@@ -206,25 +219,17 @@ public class HL7Exporter extends AbstractTask {
 					continue;
 				}
 				
+				
+				
 				int numberOfOBXSegments = 0;
 				boolean sendObs = false;
 			
 				Encounter openmrsEncounter = (Encounter) encounterService.getEncounter(encId);
 				
-				HL7MessageConstructor constructor = new HL7MessageConstructor(configFileName);
+				org.openmrs.module.rgrta.hl7.mckesson.HL7MessageConstructor constructor = 
+					new org.openmrs.module.rgrta.hl7.mckesson.HL7MessageConstructor(configFileName, null );
 				
-				if (conceptCategory != null && (conceptCategory.equalsIgnoreCase("PSF TIFF")
-						|| conceptCategory.equalsIgnoreCase("PWS TIFF"))){
-					constructor.setImage(true);
-					String sendImage = hl7Properties.getProperty("send_form_images");
-					if (sendImage != null && sendImage.equalsIgnoreCase("false") ){
-						export.setStatus(RgrtaService.getRgrtaExportStatusByName("do_not_send"));
-						RgrtaService.saveRgrtaHL7Export(export);
-						continue;
-					}
-		
-				}
-				
+			
 				List<Encounter> queryEncounterList = new ArrayList<Encounter>();
 				queryEncounterList.add(openmrsEncounter);
 			
@@ -232,76 +237,14 @@ public class HL7Exporter extends AbstractTask {
 				constructor.AddSegmentPID(openmrsEncounter.getPatient());
 				constructor.AddSegmentPV1(openmrsEncounter);
 				
-				String sendImage = hl7Properties.getProperty("send_form_images");
-				//Construct TIFFS
-				
-				if (conceptCategory != null && conceptCategory.equalsIgnoreCase("PSF TIFF")){
-				
-					
-					if (!addOBXForTiff(constructor, openmrsEncounter , "PSF", mappings, 
+			
+				if (!addOBXForTiff(constructor, openmrsEncounter , formId, null, 
 							hl7Properties)){
 						export.setStatus(RgrtaService.getRgrtaExportStatusByName("Image_not_found"));
 						RgrtaService.saveRgrtaHL7Export(export);
 						continue;
-					}
-					
 				}
-				
-				if (conceptCategory != null && conceptCategory.equalsIgnoreCase("PWS TIFF")){
-					String batteryName = hl7Properties.getProperty("pws_battery_name");
 					
-					if (!addOBXForTiff(constructor, openmrsEncounter,"PWS", mappings, hl7Properties )){
-						export.setStatus(RgrtaService.getRgrtaExportStatusByName("Image_not_found"));
-						RgrtaService.saveRgrtaHL7Export(export);
-						continue;
-					}
-					
-				}
-				
-				//Get observations for vitals and general observations.
-				//Create an OBR and block of OBX vitals 
-				//Create an OBR and block of OBX for non vitals
-
-				
-				//TODO:  Add handling of obs with coded answers using new mapping xml
-				if (conceptCategory != null && conceptCategory.equalsIgnoreCase("Vitals") ||
-						conceptCategory.equalsIgnoreCase("POC")){
-					
-					//First the vital battery 
-					String batteryName = hl7Properties.getProperty("vitals_battery_name");
-					
-					List<Obs> obsList = getObsListByBattery(openmrsEncounter, mappings, batteryName );
-				
-					//Create OBR and OBX segments for Vitals
-					int orderRep = 0;
-					if (obsList != null && obsList.size()> 0){
-						numberOfOBXSegments = addOBXBlock(constructor, openmrsEncounter, 
-								obsList, mappings, batteryName, orderRep);
-						orderRep++;
-						if (numberOfOBXSegments > 0) sendObs = true;
-					}
-					
-					// general -- MEDICAL RECORD FILE OBSERVATIONS
-					batteryName = hl7Properties.getProperty("general_battery_name");
-					List<Obs> obsListMRF = getObsListByBattery(openmrsEncounter, mappings, batteryName );
-				
-					//Create OBR and OBX segments for MEDICAL RECORD FILE OBSERVATIONS
-					if (obsListMRF != null && obsListMRF.size()> 0){
-						numberOfOBXSegments = addOBXBlock(constructor, openmrsEncounter, 
-								obsListMRF, mappings, batteryName, orderRep);
-						if (numberOfOBXSegments > 0) sendObs = true;
-					}
-					
-					//If no observations, do not create message
-					if (!sendObs){
-						export.setStatus(RgrtaService.getRgrtaExportStatusByName("no_obs"));
-						RgrtaService.saveRgrtaHL7Export(export);
-						continue;
-					}
-
-				}
-				
-				
 				//Send the message
 				String message = constructor.getMessage();
 				export.setStatus(RgrtaService.getRgrtaExportStatusByName("hl7_sent"));
@@ -692,43 +635,42 @@ public class HL7Exporter extends AbstractTask {
 		return ackDate;
 	}
 	
-	private String getFileLocation(Integer encId){
-		String filename = "";
-		EncounterService encounterService = Context.getService(EncounterService.class);
-		LocationService locationService = Context.getLocationService();
-		ChirdlUtilService chirdlUtilService = Context.getService(ChirdlUtilService.class);
-		LocationTag locTag =null;
+	private Integer getFormIdByExportQueueId(Integer queueId){
+		Integer formId = null;
+		RgrtaService RgrtaService = Context.getService(RgrtaService.class);
+		RgrtaHL7ExportMap exportmap =  RgrtaService.getRgrtaExportMapByQueueId(queueId);
+		if (exportmap == null){
+			return null;
+		}
 		
-		org.openmrs.module.rgrta.hibernateBeans.Encounter RgrtaEncounter 
-			= (org.openmrs.module.rgrta.hibernateBeans.Encounter) 
-			encounterService.getEncounter(encId);
+		String formIdString = exportmap.getValue();
+		if (formIdString == null){
+			return null;
+		}
+		formId = Integer.valueOf(formIdString);
 		
-		Location loc = RgrtaEncounter.getLocation();
+		return formId;
+	}
+	
+	private String getConfigFileLocation( Integer formId){
+		
+		
+		String filename = null;
 		Integer locId = null;
-		if (loc != null){
-			locId = loc.getLocationId();	
-		}
-  
-		String printerLocation = RgrtaEncounter.getPrinterLocation();
-		if (printerLocation != null){
-			locTag = locationService.getLocationTagByName(printerLocation);
-		}
-		if (printerLocation == null){
-			LocationAttributeValue locAttrValue = chirdlUtilService.getLocationAttributeValue(locId, "defaultPrinterLocation");
-			if (locAttrValue != null ){
-				String locTagStr = locAttrValue.getValue();
-				if (locTagStr != null && !locTagStr.equals("")){
-					locTag = locationService.getLocationTag(Integer.valueOf(locTagStr));
-				}
-			}
-			
-		}
+		Integer locTagId = null;
 		
-		if (locTag != null) {
-			LocationTagAttributeValue locationTagValue = chirdlUtilService.getLocationTagAttributeValue(
-					locTag.getId(), "HL7ConfigFile", 
-					RgrtaEncounter.getLocation().getLocationId());
-		 	if (locationTagValue != null )filename = locationTagValue.getValue();
+		LocationService locService = Context.getLocationService();
+		
+		
+		ATDService atdService = Context.getService(ATDService.class);
+		Location loc= locService.getLocation("Unknown Location");
+		LocationTag  locTag = locService.getLocationTagByName("Default Location Tag");
+		locId = loc.getLocationId();
+		locTagId = locTag.getLocationTagId();
+		
+		FormAttributeValue formAttrValue = atdService.getFormAttributeValue(formId, "HL7ConfigFile", locTagId, locId);
+		if (formAttrValue != null){
+			filename = formAttrValue.getValue();
 		}
 		return filename;
 	}
@@ -747,11 +689,13 @@ public class HL7Exporter extends AbstractTask {
 	}
 	
 	
-	private String getRgrtaExportConceptMapByQueueId(Integer hl7ExportQueueId){
+/*	private String getRgrtaExportConceptMapByQueueId(Integer hl7ExportQueueId){
 		String filename = null;
 		ChirdlUtilService chirdlUtilService = Context.getService(ChirdlUtilService.class);
 		RgrtaService RgrtaService = Context.getService(RgrtaService.class);
 		RgrtaHL7ExportMap exportmap =  RgrtaService.getRgrtaExportMapByQueueId(hl7ExportQueueId);
+		ATDService atdService = Context.getService(ATDService.class);
+		atdService.getFormAttributeValue(formId, formAttributeName, locationTagId, locationId)
 		
 		if (exportmap == null){
 			return null;
@@ -771,6 +715,7 @@ public class HL7Exporter extends AbstractTask {
 		
 		return filename;
 	}
+	*/
 	
 	
 	
@@ -799,29 +744,44 @@ public class HL7Exporter extends AbstractTask {
 	}
 	
 
-	private boolean addOBXForTiff(HL7MessageConstructor constructor,
-			Encounter encounter, String form ,Hashtable<String,
+	private boolean addOBXForTiff(org.openmrs.module.rgrta.hl7.mckesson.HL7MessageConstructor constructor,
+			Encounter encounter, Integer formId ,Hashtable<String,
 			String> mappings, 
 			Properties hl7Properties){
+		
+		
 		boolean obxcreated = false;
 		Integer locationTagId = null;
-		String batteryName = hl7Properties.getProperty("psf_battery_name");
-		String attachmentConceptName = hl7Properties.getProperty("attachment_battery_name");
-		String attachmentText = hl7Properties.getProperty("attachment_text");
+		String formName = null;
+		int obsRep = 0;
+		
+		String obrBatteryName = hl7Properties.getProperty("obr_name");
+		String obrBatteryCode = hl7Properties.getProperty("obr__code");
+		String obxAlertTitle = hl7Properties.getProperty("obx_title");
+		String obxAlertTitleCode = hl7Properties.getProperty("obx_title_code");
+		String obxAlertDescripton = hl7Properties.getProperty("obx_alert_description");
+		String obxAlert = hl7Properties.getProperty("obx_alert");
+		String obxAlertCode = hl7Properties.getProperty("obx_alert_code");
+		
 		
 		
 		ATDService atdService = Context.getService(ATDService.class);
+		FormService formService = Context.getFormService();
+		Form form = formService.getForm(formId);
+		if (form != null){
+			formName = form.getName();
+		}
 		
 		String formDir = "";
 		String hl7Abbreviation = "ED";
 		Integer encounterId = encounter.getEncounterId();
 		locationTagId = getLocationTagIdByEncounter(encounterId);
 		
+		
 		List<PatientState> patientStates = 
-			atdService.getPatientStatesWithFormInstances(form, encounterId);
+			atdService.getPatientStatesWithFormInstances(formName, encounterId);
 		
 		FormInstance formInstance = null;
-		Integer formId = null;
 		Integer formInstanceId = null;
 		Integer formLocationId = null;
 		
@@ -860,7 +820,7 @@ public class HL7Exporter extends AbstractTask {
 				return false;
 			}
 			filename = "_" + formLocationId + "-" + formId + "-" + formInstanceId + "_";
-			File file = new File(formDir + filename + ".tif");
+			File file = new File(formDir + filename + ".pdf");
 			if (!file.exists()){
 				return false;
 			}
@@ -870,38 +830,17 @@ public class HL7Exporter extends AbstractTask {
 			}
 				
 			int orderRep = 0;
-			addOBRSegment(constructor, encounter,  batteryName, orderRep);
 			
-			String rmrsName = "";
-			int obsRep = 0;
-			Collection<String> values = mappings.values();
-			Iterator <String>  it = values.iterator();
-			if (it.hasNext()){
-				rmrsName = it.next();
-			}
-			
-			Concept rmrsConcept = getRMRSConceptByName(rmrsName);
-			if (rmrsConcept != null){
-				
-				String rmrsCode = getRMRSCodeFromConcept(rmrsConcept);	
-				Date datetime = encounter.getDateCreated();
-			
-				Concept attachmentConcept = getRMRSConceptByName(attachmentConceptName);
-				if (attachmentConcept == null){
-					log.error("Concept for OBX containing attachment text does not exist. " +
-							"Check that the Concept for the obx attachment has been created.");
-					return false;
-				}
-				String attachmentCode = getRMRSCodeFromConcept(attachmentConcept);
-				
-				constructor.AddSegmentOBX(attachmentConceptName, attachmentCode,
-						null, null, attachmentText, null, datetime, "ST", orderRep, obsRep);
-				OBX resultOBX = constructor.AddSegmentOBX(rmrsName, rmrsCode, 
-						null, "", encodedForm, "", datetime, hl7Abbreviation, orderRep, obsRep +1);
-				if (resultOBX != null){
+			constructor.setFormInstance(formInstance.toString());
+			constructor.AddSegmentOBR(encounter, obrBatteryCode, obrBatteryName, orderRep);
+			constructor.AddSegmentOBX(obxAlertTitle, obxAlertTitleCode,
+						null, null, obxAlertDescripton, null, new Date() , "ST", orderRep, obsRep);
+			OBX resultOBX = constructor.AddSegmentOBX(obxAlert, obxAlertCode, 
+						null, "", encodedForm, "", new Date() , hl7Abbreviation, orderRep, obsRep + 1);
+			if (resultOBX != null){
 					obxcreated = true;
-				} 
-			}
+			} 
+		
 		} catch (Exception e) {
 			log.error("Exception adding OBX for tiff image. " + e.getMessage());
 		}
