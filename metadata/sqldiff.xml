@@ -22,32 +22,6 @@
 <sql>
 
 
-
-CREATE TABLE rgrta_error_category (
-  error_category_id int(11) NOT NULL auto_increment,
-  name varchar(255) NOT NULL,
-  description varchar(255) default NULL,
-  PRIMARY KEY  (error_category_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-CREATE TABLE rgrta_error (
-  error_id int(11) NOT NULL auto_increment,
-  error_category_id int(11) default NULL,
-  level varchar(50) default NULL,
-  session_id int(11) default NULL,
-  message varchar(255) default NULL,
-  stack_trace mediumtext,
-  date_time datetime default NULL,
-  PRIMARY KEY  (error_id),
-  KEY error_category_id (error_category_id),
-  CONSTRAINT rgrta_error_ibfk_1 FOREIGN KEY (error_category_id) REFERENCES rgrta_error_category (error_category_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-
-
-
-
 CREATE TABLE rgrta_statistics (
   statistics_id int(11) NOT NULL auto_increment,
   patient_id int(11) NOT NULL,
@@ -111,87 +85,11 @@ CREATE TABLE rgrta_study_attribute_value (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-
-
-
-INSERT INTO rgrta_error_category
-   (`name`, `description`)
-VALUES
-   ('Query Kite Connection', 'Query Kite connection timeout');
-
-INSERT INTO rgrta_error_category
-   (`name`, `description`)
-VALUES
-   ('General Error', 'Unknown error category');
-
-INSERT INTO rgrta_error_category
-   (`name`, `description`)
-VALUES
-   ('PSF Scan', 'PSF scanning problems');
-
-INSERT INTO rgrta_error_category
-   (`name`, `description`)
-VALUES
-   ('PWS Scan', 'PWS scanning problems');
-
-INSERT INTO rgrta_error_category
-   (`name`, `description`)
-VALUES
-   ('Hl7 Parsing', 'HAPI  hl7 parser failed');
-
-INSERT INTO rgrta_error_category
-   (`name`, `description`)
-VALUES
-   ('MRN Validity', 'Invalid medical record numbers on PSF or PWS. Sometimes related to scanning problems');
-
-INSERT INTO rgrta_error_category
-   (`name`, `description`)
-VALUES
-   ('XML Parsing', 'Unable to parse file to be consumed.');
-
-INSERT INTO rgrta_error_category
-   (`name`, `description`)
-VALUES
-   ('Form Instance ID Validity', 'Invalid form instance id tags on forms');
-INSERT INTO atd_state_action
-   (`action_name`, `action_description`)
-VALUES
-   ('WAIT FOR PRINT', 'Waiting for teleform to print xml file');
-
-INSERT INTO atd_state_action
-   (`action_name`, `action_description`)
-VALUES
-   ('WAIT FOR SCAN', 'Waiting for person to scan printed telform form back');
-
-INSERT INTO atd_state_action
-   (`action_name`, `action_description`)
-VALUES
-   ('CONSUME FORM INSTANCE', 'Processing scanned teleform form xml');
-
-INSERT INTO atd_state_action
-   (`action_name`, `action_description`)
-VALUES
-   ('RANDOMIZE', 'Randomize patient to given study');
-
-INSERT INTO atd_state_action
-   (`action_name`, `action_description`)
-VALUES
-   ('QUERY KITE', 'Query kite.regenstrief.org for patient information');
-
-INSERT INTO atd_state_action
-   (`action_name`, `action_description`)
-VALUES
-   ('REPRINT', 'Reprints a form');
-
-INSERT INTO atd_state_action
-   (`action_name`, `action_description`)
-VALUES
-   ('RESCAN', 'Rescans and processes a form');
-
 INSERT INTO atd_program
    (`name`,`version`)
 VALUES
    ('rgrta', '1.0');
+   
 INSERT INTO atd_form_attribute
    (`name`, `description`)
 VALUES
@@ -216,145 +114,6 @@ INSERT INTO rgrta_study_attribute
 VALUES
    ('Custom Randomizer', 'Custom randomization class');
 
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'JIT', max(state_action_id)  from atd_state_action where action_name='PRODUCE JIT';
-
-INSERT INTO atd_state
-   (`name`)
-VALUES
-   ('CHECKIN');
-
-INSERT INTO atd_state
-   (`name`)
-VALUES
-   ('FINISHED');
-
-INSERT INTO atd_state
-   (`name`)
-VALUES
-   ('ErrorState');
-   
-   
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'PSF_printed', max(state_action_id) from atd_state_action where action_name='WAIT FOR PRINT';
-
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'PSF_wait_to_scan', max(state_action_id)  from atd_state_action where action_name='WAIT FOR SCAN';
-
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'PWS_printed', max(state_action_id)  from atd_state_action where action_name='WAIT FOR PRINT';
-
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'PWS_wait_to_scan', max(state_action_id)  from atd_state_action where action_name='WAIT FOR SCAN';
-
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'PWS_process', max(state_action_id)  from atd_state_action where action_name='CONSUME FORM INSTANCE';
-
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'Randomize', max(state_action_id)  from atd_state_action where action_name='RANDOMIZE';
-
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'PSF_process', max(state_action_id)  from atd_state_action where action_name='CONSUME FORM INSTANCE';
-   
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'QUERY KITE PWS', max(state_action_id)  from atd_state_action where action_name='QUERY KITE';
-
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'QUERY KITE PSF', max(state_action_id)  from atd_state_action where action_name='QUERY KITE';
-   
-   INSERT INTO atd_state
-   (`name`,`state_action_id`)
-select  'PSF_reprint', max(state_action_id) from atd_state_action a,form b where action_name='REPRINT' and b.name='PSF' and b.retired=0;
-
-INSERT INTO atd_state
-   (`name`,`state_action_id`)
-select  'PWS_reprint', max(state_action_id) from atd_state_action a,form b where action_name='REPRINT' and b.name='PWS' and b.retired=0;
-
-INSERT INTO atd_state
-   (`name`,`state_action_id`)
-select  'PSF_rescan', max(state_action_id) from atd_state_action a,form b where action_name='RESCAN' and b.name='PSF' and b.retired=0;
-
-INSERT INTO atd_state
-   (`name`,`state_action_id`)
-select  'PWS_rescan', max(state_action_id) from atd_state_action a,form b where action_name='RESCAN' and b.name='PWS' and b.retired=0;
-
-INSERT INTO atd_state
-   (`name`,`state_action_id`)
-select  'PSF_create', max(state_action_id) from atd_state_action a,form b where action_name='PRODUCE FORM INSTANCE' and b.name='PSF' and b.retired=0;
-
-INSERT INTO atd_state
-   (`name`,`state_action_id`)
-select  'PWS_create', max(state_action_id) from atd_state_action a,form b where action_name='PRODUCE FORM INSTANCE' and b.name='PWS' and b.retired=0;
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='CHECKIN' and b.name='QUERY KITE PSF' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='PSF_printed' and b.name='PSF_wait_to_scan' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='PSF_wait_to_scan' and b.name='PSF_process' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='PWS_create' and b.name='PWS_printed' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='PWS_printed' and b.name='PWS_wait_to_scan' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='PWS_wait_to_scan' and b.name='PWS_process' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='PWS_process' and b.name='FINISHED' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='PSF_create' and b.name='PSF_printed' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='Randomize' and b.name='PSF_create' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='QUERY KITE PSF' and b.name='Randomize' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='PSF_process' and b.name='QUERY KITE PWS' and c.name='rgrta';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='QUERY KITE PWS' and b.name='PWS_create' and c.name='rgrta';
 
 INSERT INTO scheduler_task_config
    (`name`, `schedulable_class`, `start_time_pattern`, `repeat_interval`, `start_on_startup`, `started`, `created_by`, `date_created`)
@@ -407,22 +166,7 @@ where a.cnt=0;
 </sql>
 </diff>
 
-<diff>
-		<version>1.2.4</version>
-		<author>Meena Sheley</author>
-		<date>Jan 5, 2009</date>
-		<description>
-		Add high blood pressure lookup table and states for PSF/PWS rescan and reprint.
-		</description>
-<sql>
-CREATE TABLE IF NOT EXISTS `rgrta_response` (
-  `queue_id` int(11) NOT NULL auto_increment,
-  `session_id` int(11) NOT NULL,
-  `process_date` datetime default NULL,
-  PRIMARY KEY  (`queue_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-</sql>
-</diff>
+
 <diff>
 		<version>1.2.5</version>
 		<author>Tammy Dugan</author>
@@ -433,7 +177,6 @@ CREATE TABLE IF NOT EXISTS `rgrta_response` (
 		</description>
 <sql>
 
-delete from user_role where role='Provider' and user_id=(select max(user_id) from users where system_id='admin');
 
 INSERT INTO `person`
 (creator,date_created)
@@ -463,20 +206,7 @@ where b.cnt=0;
 
 </sql>
 </diff>
-<diff>
-		<version>1.2.6</version>
-		<author>Tammy Dugan</author>
-		<date>Feb 5, 2009</date>
-		<description>
-		Added mapping for PSF_rescan state that creates a new PWS.
-		</description>
-<sql>
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='PSF_rescan' and b.name='QUERY KITE PWS' and c.name='rgrta';
-</sql>
-</diff>
+
 <diff>
 		<version>1.2.7</version>
 		<author>Meena Sheley</author>
@@ -502,34 +232,9 @@ WHERE
 </sql>
 </diff>
 
-<diff>
-		<version>1.2.8</version>
-		<author>Vibha Anand</author>
-		<date>Mar 11, 2009</date>
-		<description>
-		Update voided = 0 for user - .Other.
-		</description>
-<sql>
 
-UPDATE `users`
-set voided = 0 where username='.Other.'
 
-</sql>
-</diff>
 
-<diff>
-		<version>1.2.9</version>
-		<author>Vibha Anand</author>
-		<date>Mar 11, 2009</date>
-		<description>
-		Update retired = 0 for encounter types - ManualCheckin and HL7Message
-		</description>
-<sql>
-
-UPDATE `encounter_type`
-set retired = 0 where name='ManualCheckin' or name='HL7Message'
-</sql>
-</diff>
 
 
 	   <diff>
@@ -549,31 +254,7 @@ where a.cnt=0;
 	
 	</sql>
 	</diff>
-
-	<diff>
-		<version>1.3.2</version>
-		<author>Tammy Dugan</author>
-		<date>May 11, 2009</date>
-		<description>
-		Renamed stack_trace column in rgrta_error table 
-		</description>
-		<sql>
-		ALTER TABLE rgrta_error CHANGE COLUMN stack_trace details mediumtext;
-		</sql>
-	</diff>
-		<diff>
-		<version>1.3.3</version>
-		<author>Tammy Dugan</author>
-		<date>May 13, 2009</date>
-		<description>
-		Add two new states for timing rgrta process.
-		</description>
-		<sql>
-		insert into atd_state(name) values('QUERY KITE Alias');
-		insert into atd_state(name) values ('Clinic Registration');
-		insert into atd_state(name) value ('Process Checkin HL7');
-		</sql>
-	</diff>
+	
 	<diff>
 		<version>1.3.4</version>
 		<author>Tammy Dugan</author>
@@ -587,84 +268,9 @@ set start_time='2009-06-01 01:00:00'
 where name in ('Cron job retiring Inactive Providers')
 </sql>
 	</diff>
-	<diff>
-		<version>1.3.5</version>
-		<author>Tammy Dugan</author>
-		<date>June 29, 2009</date>
-		<description>
-		Added active printer location attribute to location tag attribute.
-		</description>
-	<sql>	
-	CREATE TABLE `rgrta_location_tag_attribute` (
-  `location_tag_attribute_id` int(11) NOT NULL auto_increment,
-  `name` varchar(255) NOT NULL,
-  `description` varchar(255) default NULL,
-  PRIMARY KEY  (`location_tag_attribute_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-CREATE TABLE `rgrta_location_tag_attribute_value` (
-  `location_tag_attribute_value_id` int(11) NOT NULL auto_increment,
-  `location_tag_id` int(11) NOT NULL,
-  `value` varchar(255) NOT NULL,
-  `location_tag_attribute_id` int(11) NOT NULL,
-  PRIMARY KEY  (`location_tag_attribute_value_id`),
-  KEY `location_tag_value_fk_location_tag` (`location_tag_id`),
-  KEY `location_tag_value_fk_attr` (`location_tag_attribute_id`),
-  CONSTRAINT `location_tag_value_fk_attr` FOREIGN KEY (`location_tag_attribute_id`) REFERENCES `rgrta_location_tag_attribute` (`location_tag_attribute_id`),
-  CONSTRAINT `location_tag_value_fk_location_tag` FOREIGN KEY (`location_tag_id`) REFERENCES `location_tag` (`location_tag_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-	INSERT INTO `rgrta_location_tag_attribute`(name,description) 
-	VALUES ( 'ActivePrinterLocation', 'Printer locations in the hl7 message that should be processed');
-		
-	</sql>
-	</diff>
-		<diff>
-		<version>1.3.6</version>
-		<author>Tammy Dugan</author>
-		<date>September 8, 2009</date>
-		<description>
-		Renamed rgrta_response table to rgrta_hl7_export. Added new state called "Export" and action LOAD HL7 EXPORT QUEUE.
-		</description>
-	<sql>
-	CREATE TABLE `rgrta_hl7_export` (
-  `queue_id` int(11) NOT NULL AUTO_INCREMENT,
-  `encounter_id` int(11) NOT NULL,
-  `status` int(11) NOT NULL default 1,
-  `date_inserted` datetime NOT NULL default '0002-11-30 00:00:00',
-  `date_processed` datetime DEFAULT NULL,
-  `voided` smallint(6) NOT NULL default '0',
-  `date_voided` datetime default NULL,
-  PRIMARY KEY (`queue_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
-
-insert into rgrta_hl7_export(queue_id,encounter_id,date_processed)
-select queue_id,b.encounter_id,process_date from rgrta_response a
-inner join atd_session b on a.session_id=b.session_id;
-
-drop table rgrta_response;
-
-INSERT INTO atd_state_action
-   (`action_name`, `action_description`)
-VALUES
-   ('LOAD HL7 EXPORT QUEUE', 'Loads a queue for sending results to Regenstrief');
-
-INSERT INTO atd_state
-   (`name`, `state_action_id`)
-select  'Export', max(state_action_id)  from atd_state_action where action_name='LOAD HL7 EXPORT QUEUE';
-
-INSERT INTO atd_state_mapping
-   (`initial_state`, `next_state`,`program_id`)
-select  max(a.state_id),max(b.state_id),max(program_id)
- from atd_state a,atd_state b, atd_program c where a.name='Export' and b.name='Query Kite PWS' and c.name='rgrta';
-
-update atd_state_mapping a, atd_state b, atd_program c
-set a.next_state=b.state_id
-where c.name='rgrta' and a.initial_state in (select state_id
-from atd_state where name='PSF_process') and b.name='Export';
-	</sql>
-	</diff>
+	
 	<diff>
 		<version>1.3.7</version>
 		<author>Meena Sheley</author>
@@ -673,24 +279,6 @@ from atd_state where name='PSF_process') and b.name='Export';
 		Added hl7 export functionality
 		</description>
 	<sql>
-		CREATE TABLE  `rgrta_hl7_export_status` (
-  		`hl7_export_status_id` int(11) NOT NULL,
-  		`description` varchar(200) DEFAULT NULL,
-  		PRIMARY KEY (`hl7_export_status_id`),
-  		KEY `rgrta_hl7_export_status_id` (`hl7_export_status_id`) USING BTREE
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8;	
-
-
-		INSERT INTO `rgrta_hl7_export_status` VALUES ('1', 'Inserted to pending queue');
-		INSERT INTO `rgrta_hl7_export_status` VALUES ('2', 'Hl7 message constructed and send message requested');
-		INSERT INTO `rgrta_hl7_export_status` VALUES ('3', 'ACK received');
-		INSERT INTO `rgrta_hl7_export_status` VALUES ('4', 'ACK not received after multiple retries');
-		INSERT INTO `rgrta_hl7_export_status` VALUES ('100', 'Not Required');
-
-		ALTER IGNORE  TABLE  rgrta_hl7_export 
-		ADD ack_date datetime default null after date_processed,
-		ADD KEY `FK_rgrta_hl7_export_1` (`status`),
-		ADD FOREIGN KEY (status) REFERENCES rgrta_hl7_export_status (hl7_export_status_id);
 		
 		INSERT INTO `scheduler_task_config` ( name, description, schedulable_class, start_time,
 		start_time_pattern, repeat_interval, start_on_startup, started, date_created, created_by)
@@ -728,14 +316,12 @@ where name='rgrta';
 	    	alter table rgrta_statistics add CONSTRAINT rgrta_stat_fk_loc FOREIGN KEY (location_id) REFERENCES location (location_id);
 		
 		insert into atd_error_category
-select * from rgrta_error_category;
+			select * from rgrta_error_category;
 
 insert into atd_error(error_id,error_category_id,level,session_id,message,details,date_time)
 select * from rgrta_error;
 
-drop table rgrta_error;
 
-drop table rgrta_error_category;
 
 alter table rgrta_location_tag_attribute_value add column location_id int NOT NULL default 1;
 alter table rgrta_location_tag_attribute_value add CONSTRAINT rgrta_loc_tag_att_fk_loc 
@@ -782,58 +368,113 @@ VALUES
 VALUES
    (', useAlternatePrinter', 'Flag used to indicate when alternate printer should be used.');
 
-	update atd_state_action
-set action_class='org.openmrs.module.rgrta.action.ProduceFormInstance'
-where action_name='PRODUCE FORM INSTANCE';
+	DROP TABLE IF EXISTS `atd_state`;
 
-update atd_state_action
-set action_class='org.openmrs.module.rgrta.action.ConsumeFormInstance'
-where action_name='CONSUME FORM INSTANCE';
+CREATE TABLE `atd_state` (
+  `state_id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `state_action_id` int(11) DEFAULT NULL,
+  `date_changed` datetime DEFAULT NULL,
+  `changed_by` int(11) DEFAULT NULL,
+  `date_created` datetime DEFAULT NULL,
+  `creator` int(11) DEFAULT NULL,
+  `form_name` varchar(40) DEFAULT NULL,
+  PRIMARY KEY (`state_id`),
+  KEY `state_fk_action` (`state_action_id`),
+  KEY `state_fk_creator` (`creator`),
+  KEY `state_fk_changed` (`changed_by`),
+  CONSTRAINT `state_fk_action` FOREIGN KEY (`state_action_id`) REFERENCES `atd_state_action` (`state_action_id`),
+  CONSTRAINT `state_fk_changed` FOREIGN KEY (`changed_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `state_fk_creator` FOREIGN KEY (`creator`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8;
 
-update atd_state_action
-set action_class='org.openmrs.module.rgrta.action.WaitForPrint'
-where action_name='WAIT FOR PRINT';
+LOCK TABLES `atd_state` WRITE;
+/*!40000 ALTER TABLE `atd_state` DISABLE KEYS */;
+INSERT INTO `atd_state` VALUES (1,'JIT',NULL,2,NULL,NULL,NULL,NULL,NULL),
+(2,'CHECKIN',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(3,'FINISHED',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(4,'ErrorState',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(10,'Randomize',NULL,6,NULL,NULL,NULL,NULL,NULL),
+(20,'QUERY KITE Alias',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(21,'Clinic Registration',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(22,'Process Checkin HL7',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(23,'Export',NULL,10,NULL,NULL,NULL,NULL,NULL),
+(24,'Query medication list',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(25,'Export POC',NULL,10,NULL,NULL,NULL,NULL,NULL),
+(26,'JIT_create',NULL,1,NULL,NULL,NULL,NULL,NULL),
+(27,'JIT_printed',NULL,3,NULL,NULL,NULL,NULL,NULL),
+(28,'JIT_wait_to_scan',NULL,4,NULL,NULL,NULL,NULL,NULL),
+(29,'JIT_process',NULL,5,NULL,NULL,NULL,NULL,NULL),
+(30,'JIT_rescan',NULL,9,NULL,NULL,NULL,NULL,NULL),
+(31,'JIT_FINISHED',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(32,'JIT_reprint',NULL,8,NULL,NULL,NULL,NULL,NULL),
+(33,'JIT_incomplete',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(34,'RTA_create',NULL,11,NULL,NULL,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `atd_state` ENABLE KEYS */;
+UNLOCK TABLES;
 
-update atd_state_action
-set action_class='org.openmrs.module.rgrta.action.WaitForScan'
-where action_name='WAIT FOR SCAN';
-
-update atd_state_action
-set action_class='org.openmrs.module.rgrta.action.Rescan'
-where action_name='RESCAN';
-
-update atd_state_action
-set action_class='org.openmrs.module.rgrta.action.Reprint'
-where action_name='REPRINT';
-
-update atd_state_action
-set action_class='org.openmrs.module.rgrta.action.Randomize'
-where action_name='RANDOMIZE';
-
-update atd_state_action
-set action_class='org.openmrs.module.rgrta.action.QueryKite'
-where action_name='QUERY KITE';
-
-update atd_state_action
-set action_class='org.openmrs.module.rgrta.action.LoadHL7ExportQueue'
-where action_name='LOAD HL7 EXPORT QUEUE';
-
-alter table rgrta_hl7_export add CONSTRAINT rgrta_hl7_export_fk_encounter
-		FOREIGN KEY (encounter_id)  REFERENCES encounter (encounter_id);
-		
-		insert into rgrta_location_tag_attribute(name)
-select name from form where retired=0;
-
-insert into rgrta_location_tag_attribute_value(location_tag_id,value,location_tag_attribute_id,location_id)
-select location_tag_id,form_id,location_tag_attribute_id,location_id from location_tag_map a, form b, rgrta_location_tag_attribute c
-where b.retired=0 and b.name='PWS' and c.name='PWS';
-
-insert into rgrta_location_tag_attribute_value(location_tag_id,value,location_tag_attribute_id,location_id)
-select location_tag_id,form_id,location_tag_attribute_id,location_id from location_tag_map a, form b, rgrta_location_tag_attribute c
-where b.retired=0 and b.name='PSF' and c.name='PSF';
+DROP TABLE IF EXISTS `atd_state_action`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `atd_state_action` (
+  `state_action_id` int(11) NOT NULL AUTO_INCREMENT,
+  `action_name` varchar(255) NOT NULL,
+  `action_description` varchar(255) DEFAULT NULL,
+  `date_changed` datetime DEFAULT NULL,
+  `changed_by` int(11) DEFAULT NULL,
+  `date_created` datetime DEFAULT NULL,
+  `creator` int(11) DEFAULT NULL,
+  `action_class` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`state_action_id`),
+  KEY `state_action_fk_creator` (`creator`),
+  KEY `state_action_fk_changed` (`changed_by`),
+  CONSTRAINT `state_action_fk_changed` FOREIGN KEY (`changed_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `state_action_fk_creator` FOREIGN KEY (`creator`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
 
 
-alter table atd_state drop column form_id;
+LOCK TABLES `atd_state_action` WRITE;
+
+INSERT INTO `atd_state_action` VALUES (1,'PRODUCE FORM INSTANCE','Creating teleform xml',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.ProduceFormInstance'),
+(2,'PRODUCE JIT','Creates a Just In Time handout along with form',NULL,NULL,NULL,NULL,'org.openmrs.module.atd.action.ProduceJIT'),
+(3,'WAIT FOR PRINT','Waiting for teleform to print xml file',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.WaitForPrint'),
+(4,'WAIT FOR SCAN','Waiting for person to scan printed telform form back',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.WaitForScan'),
+(5,'CONSUME FORM INSTANCE','Processing scanned teleform form xml',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.ConsumeFormInstance'),
+(6,'RANDOMIZE','Randomize patient to given study',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.Randomize'),
+(7,'QUERY KITE','Query kite.regenstrief.org for patient information',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.QueryKite'),
+(8,'REPRINT','Reprints a form',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.Reprint'),
+(9,'RESCAN','Rescans and processes a form',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.Rescan'),
+(10,'LOAD HL7 EXPORT QUEUE','Loads a queue for sending results to Regenstrief',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.LoadHL7ExportQueue'),
+(11,'PRODUCE ALERT','Produce real time alert to providers',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.ProduceAlert');
+UNLOCK TABLES;
+
+DROP TABLE IF EXISTS `atd_state_mapping`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `atd_state_mapping` (
+  `initial_state` int(11) NOT NULL,
+  `next_state` int(11) NOT NULL,
+  `state_mapping_id` int(11) NOT NULL AUTO_INCREMENT,
+  `date_changed` datetime DEFAULT NULL,
+  `changed_by` int(11) DEFAULT NULL,
+  `date_created` datetime DEFAULT NULL,
+  `creator` int(11) DEFAULT NULL,
+  `program_id` int(11) NOT NULL,
+  PRIMARY KEY (`state_mapping_id`),
+  KEY `state_map_fk_initial` (`initial_state`),
+  KEY `state_map_fk_next` (`next_state`),
+  KEY `state_map_fk_program` (`program_id`),
+  KEY `state_map_fk_creator` (`creator`),
+  KEY `state_map_fk_changed` (`changed_by`),
+  CONSTRAINT `state_map_fk_changed` FOREIGN KEY (`changed_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `state_map_fk_creator` FOREIGN KEY (`creator`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `state_map_fk_initial` FOREIGN KEY (`initial_state`) REFERENCES `atd_state` (`state_id`),
+  CONSTRAINT `state_map_fk_next` FOREIGN KEY (`next_state`) REFERENCES `atd_state` (`state_id`),
+  CONSTRAINT `state_map_fk_program` FOREIGN KEY (`program_id`) REFERENCES `atd_program` (`program_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8;
+
+
 
 INSERT INTO scheduler_task_config
    (`name`, `schedulable_class`, `start_time_pattern`, `repeat_interval`, `start_on_startup`, `started`, `created_by`, `date_created`)
@@ -851,129 +492,58 @@ and task_config_id=(select max(task_config_id) from scheduler_task_config where 
 where b.cnt=0;
 	</sql>
 	</diff>
-	<diff>
-		<version>1.3.9</version>
-		<author>Tammy Dugan</author>
-		<date>Nov 3, 2009</date>
-		<description>
-		Add hl7 config file location attribute.
-		</description>
-	<sql>	
-	insert into rgrta_location_tag_attribute (name, description)
-values ('HL7ConfigFile', 'Configuration file for outbound hl7 messages');
-	</sql>
-	</diff>
-	<diff>
-		<version>1.4.0</version>
-		<author>Tammy Dugan</author>
-		<date>Nov 11, 2009</date>
-		<description>
-		Remove rgrta_location_* tables since they were moved to the chirdlutil module
-		</description>
-	<sql>	
-	insert into chirdlutil_location_tag_attribute 
-	select * from rgrta_location_tag_attribute;
-	
-	insert into chirdlutil_location_attribute 
-	select * from rgrta_location_attribute;
-	
-	insert into chirdlutil_location_tag_attribute_value 
-	select * from rgrta_location_tag_attribute_value;
-	
-	insert into chirdlutil_location_attribute_value 
-	select * from rgrta_location_attribute_value;
-	
-	drop table rgrta_location_tag_attribute_value;
-	drop table rgrta_location_tag_attribute;
-	drop table rgrta_location_attribute_value;
-	drop table rgrta_location_attribute;
-	
-	</sql>
-	</diff>
-	<diff>
-		<version>1.4.1</version>
-		<author>Tammy Dugan</author>
-		<date>Dec 2, 2009</date>
-		<description>
-		Added configuration needed for medication list lookup.
-		</description>
-	<sql>	
-	INSERT INTO `chirdlutil_location_attribute`(name,description)
- VALUES ('medicationListQueryUser', 
- 'Location based user for querying the rg ccd service for a patient medication list');
-
-	INSERT INTO atd_error_category
-   (`name`, `description`)
-VALUES
-   ('Query Medication List Connection', 'Query Medication List connection timeout');
-   
-   INSERT INTO atd_state
-   (`name`)
-VALUES
-   ('Query medication list');
-
-</sql>
-	</diff>
-		<diff>
-		<version>1.4.2</version>
-		<author>Tammy Dugan</author>
-		<date>Dec 22, 2009</date>
-		<description>
-		Added location tag attribute for medications that should always display on the medication list.
-		</description>
-	<sql>
-	insert into chirdlutil_location_tag_attribute (name, description)
-values ('unfilteredMedicationFile', 'Configuration file listing medications that should always appear on the medication list');
-	</sql>
-	</diff>
-	
+		
 	<diff>
 		<version>1.4.3</version>
 		<author>Meena Sheley</author>
 		<date>Jan 07, 2010</date>
 		<description>
-		Add map table for hl7 export and alter status table with new columns.
+		Add tables for export
 		</description>
 	<sql>
 	
-	CREATE TABLE  IF NOT EXISTS `rgrta_hl7_export_map` (
-  	`hl7_export_map_id` int(11) NOT NULL auto_increment,
-  	`hl7_export_queue_id` int(11) NOT NULL,
-  	`value` varchar(255) NOT NULL,
-  	`date_inserted` datetime NOT NULL default '0002-11-30 00:00:00',
-  	`voided` smallint(6) NOT NULL default '0',
-  	`date_voided` datetime default NULL,
-  	PRIMARY KEY  (`hl7_export_map_id`)
-	)ENGINE=InnoDB AUTO_INCREMENT=143 DEFAULT CHARSET=utf8;
 	
-	alter table rgrta_hl7_export_status
-			add name  varchar(200) after hl7_export_status_id;
+	DROP TABLE IF EXISTS `rgrta`.`rgrta_hl7_export_status`;
+	CREATE TABLE  `rgrta`.`rgrta_hl7_export_status` (
+	  `hl7_export_status_id` int(11) NOT NULL,
+	  `name` varchar(200) DEFAULT NULL,
+	  `description` varchar(200) DEFAULT NULL,
+	  `date_created` datetime DEFAULT NULL,
+	  PRIMARY KEY (`hl7_export_status_id`),
+	  KEY `rgrta_hl7_export_status_id` (`hl7_export_status_id`) USING BTREE
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-	alter table rgrta_hl7_export_status
-			add date_created  datetime after description;
-		
-	insert into atd_state (name , state_action_id)
-values ('Export POC',  (select state_action_id from atd_state_action
-where action_name='LOAD HL7 EXPORT QUEUE'));
+DROP TABLE IF EXISTS `rgrta`.`rgrta_hl7_export`;
+CREATE TABLE  `rgrta`.`rgrta_hl7_export` (
+	  `queue_id` int(11) NOT NULL AUTO_INCREMENT,
+	  `encounter_id` int(11) NOT NULL,
+	  `status` int(11) NOT NULL DEFAULT '1',
+	  `date_inserted` datetime NOT NULL DEFAULT '0002-11-30 00:00:00',
+	  `date_processed` datetime DEFAULT NULL,
+	  `ack_date` datetime DEFAULT NULL,
+	  `voided` smallint(6) NOT NULL DEFAULT '0',
+	  `date_voided` datetime DEFAULT NULL,
+	  PRIMARY KEY (`queue_id`),
+	  KEY `FK_rgrta_hl7_export_1` (`status`),
+	  KEY `rgrta_hl7_export_fk_encounter` (`encounter_id`),
+	  CONSTRAINT `rgrta_hl7_export_fk_encounter` FOREIGN KEY (`encounter_id`) REFERENCES `encounter` (`encounter_id`),
+	  CONSTRAINT `rgrta_hl7_export_ibfk_1` FOREIGN KEY (`status`) REFERENCES `rgrta_hl7_export_status` (`hl7_export_status_id`)
+	) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=latin1;
 
-update atd_state set name = 'Export Vitals' 
-where name ='Export';
 
-update atd_state_mapping a set next_state =
-(select state_id from  atd_state where name='Export POC')
-where  initial_state = (select state_id from atd_state where name='PWS_process');
+	DROP TABLE IF EXISTS `rgrta`.`rgrta_hl7_export_map`;
+	CREATE TABLE  `rgrta`.`rgrta_hl7_export_map` (
+	  `hl7_export_map_id` int(11) NOT NULL AUTO_INCREMENT,
+	  `hl7_export_queue_id` int(11) NOT NULL,
+	  `value` varchar(255) NOT NULL,
+	  `date_inserted` datetime NOT NULL DEFAULT '0002-11-30 00:00:00',
+	  `voided` smallint(6) NOT NULL DEFAULT '0',
+	  `date_voided` datetime DEFAULT NULL,
+	  PRIMARY KEY (`hl7_export_map_id`)
+	) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8;
 	
-insert into atd_state_mapping (initial_state, next_state, program_id)
-values( (select state_id from atd_state where name='Export POC'),
-(select state_id from atd_state where name='FINISHED'), (select program_id from atd_program where name='rgrta'));		
-		insert into chirdlutil_location_tag_attribute (name, description)
-	values( 'POCConceptMapLocation', 'File containing concept mappings for POC');
-    insert into chirdlutil_location_tag_attribute (name, description)
-	values( 'PSFTiffConceptMapLocation', 'File containing concept mappings for PSF tiff images');
-    insert into chirdlutil_location_tag_attribute (name, description)
-	values( 'VitalsConceptMapLocation', 'File containing concept mappings for Vitals');
-    insert into chirdlutil_location_tag_attribute (name, description)
-	values( 'PWSTiffConceptMapLocation', 'File containing concept mappings for PWS tiff images');
+
+
 	
 	</sql>
 	</diff>

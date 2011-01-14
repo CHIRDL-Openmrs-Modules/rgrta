@@ -59,7 +59,9 @@ public class LoadHL7ExportQueue implements ProcessStateAction
 		//If not a form, form id will be null in export map table.
 		//Default config location will have the format for non-form;
 		
-		Integer formId = (Integer) parameters.get("formId");
+		//Integer formId = (Integer) parameters.get("formId");
+		FormInstance formInstance = (FormInstance) parameters.get("formInstance");
+		Integer formId = formInstance.getFormId();
 		String formIdString = String.valueOf(formId);
 		State currState = patientState.getState();
 		Integer sessionId = patientState.getSessionId();

@@ -25,7 +25,9 @@ import org.openmrs.module.rgrta.hibernateBeans.PatientFamily;
 import org.openmrs.module.rgrta.hibernateBeans.Statistics;
 import org.openmrs.module.rgrta.hibernateBeans.Study;
 import org.openmrs.module.rgrta.hibernateBeans.StudyAttributeValue;
+import org.springframework.transaction.annotation.Transactional;
 
+@Transactional
 public interface RgrtaService
 {
 	public void consume(InputStream input, Patient patient,

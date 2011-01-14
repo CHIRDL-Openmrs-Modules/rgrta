@@ -84,18 +84,18 @@ public class Rescan implements ProcessStateAction
 		} else
 		{
 			// void all obs for PWS
-			stats = RgrtaService.getStatsByEncounterForm(encounterId,
-					formName);
+			//stats = RgrtaService.getStatsByEncounterForm(encounterId,
+			//		formName);
 		}
 
 		// void obs from previous scan
 		ObsService obsService = Context.getObsService();
-		for (Statistics currStat : stats)
+		/*for (Statistics currStat : stats)
 		{
 			Integer obsId = currStat.getObsvId();
 			Obs obs = obsService.getObs(obsId);
 			obsService.voidObs(obs, "voided due to rescan");
-		}
+		}*/
 
 		RgrtaStateActionHandler.consume(sessionId, formInstance, patient,
 				 parameters,

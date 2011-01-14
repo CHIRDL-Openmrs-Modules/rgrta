@@ -20,21 +20,22 @@ Data:
 
 mode:=read {mode from Parameters};
 
+If (mode = PRODUCE) then
+asthma := read Last {ASTHMA_COHORT from CHICA} ;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+endif
 
 ;;
 Priority:		1       ;;
 	Evoke:		;;
 Logic:
 If (mode = PRODUCE) then
-
-conclude True;
-
-endif
-
-If (mode = CONSUME) then
-
+If (asthma = true) then conclude True;
+Else conclude False; 
 
 endif
+
+
+
 ;;
 Action:
                                           

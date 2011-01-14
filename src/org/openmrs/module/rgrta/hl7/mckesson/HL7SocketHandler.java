@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 
 import org.openmrs.Location;
+import org.openmrs.LocationTag;
 import org.openmrs.Patient;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.LocationService;
@@ -30,6 +31,8 @@ import org.openmrs.module.sockethl7listener.HL7ObsHandler;
 import org.openmrs.module.sockethl7listener.HL7PatientHandler;
 import org.openmrs.module.sockethl7listener.PatientHandler;
 import org.openmrs.module.sockethl7listener.Provider;
+import org.openmrs.module.chirdlutil.hibernateBeans.LocationTagAttributeValue;
+import org.openmrs.module.chirdlutil.service.ChirdlUtilService;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.app.ApplicationException;
@@ -266,6 +269,8 @@ public class HL7SocketHandler extends
 		
 		RgrtaEncounter.setScheduledTime(appointmentTime);
 		RgrtaEncounter.setPrinterLocation(printerLocation);
+		
+		ChirdlUtilService chirdlUtilService = Context.getService(ChirdlUtilService.class);
 
 		Location location = null;
 
@@ -275,6 +280,8 @@ public class HL7SocketHandler extends
 			if (location == null) {
 				location = new Location();
 				location.setName(locationString);
+				LocationTag locTag = locationService.getLocationTagByName("Default Location Tag");
+				location.addTag(locTag);
 				locationService.saveLocation(location);
 				logger.warn("Location '" + locationString
 						+ "' does not exist in the Location table."
@@ -282,6 +289,27 @@ public class HL7SocketHandler extends
 						+ locationString + "'");
 			}
 		}
+		
+		
+		
+		//Use default so that we don't store location
+		/*Location location = locationService
+					.getLocation("Default Location");
+
+		if (location == null)
+		{
+			location = new Location();
+			location.setName("Default Location");
+			
+			LocationTag locTag = locationService.getLocationTagByName("Default Location Tag");
+			location.addTag(locTag);
+			locationService.saveLocation(location);
+			
+			logger.warn("Location '" + locationString
+					+ "' does not exist in the Location table."
+					+ "a new location was created for '"
+					+ locationString + "'");
+		}*/
 
 		RgrtaEncounter.setLocation(location);
 		RgrtaEncounter.setInsuranceSmsCode(null);

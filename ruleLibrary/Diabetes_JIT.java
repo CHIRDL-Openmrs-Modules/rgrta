@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - Diabetes_JIT.mlm on Wed Aug 04 12:16:55 EDT 2010
+ Translated from - Diabetes_JIT.mlm on Tue Aug 31 10:57:59 EDT 2010
 
  Title:  Diabetes_JIT
  Filename:  Diabetes_JIT
@@ -245,7 +245,7 @@ return false;
 			if(evaluate_logic(parameters)){
 				Result ruleResult = new Result();
 
-				String value = null;
+				Object value = null;
 				String variable = null;
 				int varLen = 0;
 				varLen = "Diabetes_Care_Worksheet".length();
@@ -266,6 +266,13 @@ return false;
 					variable = "Diabetes_Care_Worksheet".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("Diabetes_Care_Worksheet".endsWith("_object"))
+				{
+					variable = "Diabetes_Care_Worksheet".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
 					}
 				}
 				else

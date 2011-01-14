@@ -235,7 +235,7 @@ public class RgrtaStateActionHandler implements StateActionHandler
 		}
 		
 		// save specific observations
-		saveObs(encounterId, patient,locationTagId);
+		//saveObs(encounterId, patient,locationTagId);
 		System.out.println("RgrtaStateActionHandler.consume: time of saveObs: "+
 			(System.currentTimeMillis()-startTime));
 		startTime = System.currentTimeMillis();
@@ -418,6 +418,8 @@ public class RgrtaStateActionHandler implements StateActionHandler
 			Integer locationTagId,Integer locationId)
 	{
 		ATDService atdService = Context.getService(ATDService.class);
+		LocationService locationService = Context.getLocationService();
+		
 		List<ATDError> errors = null;
 		// change to error state if fatal error exists for session
 		//only look up errors for consume state, for now
@@ -434,10 +436,16 @@ public class RgrtaStateActionHandler implements StateActionHandler
 					currState, sessionId,locationTagId,locationId);
 		} else
 		{
-			Program program = atdService.getProgram(locationTagId,locationId);
+			Location defaultLocation = locationService.getLocation("Default Location");
+			Integer defaultLocationId = 1;
+			if (defaultLocation != null){
+				defaultLocationId = defaultLocation.getLocationId();
+			} 
+			
+			Program program = atdService.getProgram(locationTagId, defaultLocationId);
 			StateManager.changeState(patient, sessionId, currState,program,
-					parameters,locationTagId,locationId,RgrtaStateActionHandler.getInstance());
-		}
+					parameters,locationTagId,defaultLocationId,RgrtaStateActionHandler.getInstance());
+			}
 
 	}
 }

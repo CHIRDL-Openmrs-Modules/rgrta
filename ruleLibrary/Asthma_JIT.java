@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - Asthma_JIT.mlm on Thu Jul 29 15:24:56 EDT 2010
+ Translated from - Asthma_JIT.mlm on Tue Jan 04 13:25:23 EST 2011
 
  Title:  Asthma_JIT
  Filename:  Asthma_JIT
@@ -154,7 +154,7 @@ public class Asthma_JIT implements Rule, DssRule{
 
 	/*** @see org.openmrs.module.dss.DssRule#getLogic()*/
 	public String getLogic(){
-		return "If If conclude Else conclude endif If endif";
+		return "If If conclude Else conclude endif";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getAction()*/
@@ -249,7 +249,9 @@ return false;
 
 			if(evaluate_logic(parameters)){
 				Result ruleResult = new Result();
-				String value = null;
+		Result asthma = (Result) resultLookup.get("asthma");
+
+				Object value = null;
 				String variable = null;
 				int varLen = 0;
 				varLen = "ASTHMA_COHORT".length();
@@ -270,6 +272,13 @@ return false;
 					variable = "ASTHMA_COHORT".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("ASTHMA_COHORT".endsWith("_object"))
+				{
+					variable = "ASTHMA_COHORT".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
 					}
 				}
 				else
@@ -305,6 +314,13 @@ return false;
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
+				else if("true".endsWith("_object"))
+				{
+					variable = "true".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
 				else
 				{
 					if (resultLookup.get("true") != null){
@@ -319,7 +335,8 @@ return false;
 					parameters.put("param2","true");
 				}
 				logicService.eval(patient, "storeObs",parameters);
-								for(String currAction:actions){
+				
+				for(String currAction:actions){
 					currAction = doAction(currAction);
 					ruleResult.add(new Result(currAction));
 				}
@@ -345,7 +362,6 @@ return false;
 		else{
 			return false;
 		}
-}		if((!mode.isNull()&&mode.toString().equalsIgnoreCase("CONSUME"))){
 }	return false;	}
 
 	public void initAction() {

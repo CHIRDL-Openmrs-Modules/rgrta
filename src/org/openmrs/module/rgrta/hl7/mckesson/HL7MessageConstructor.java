@@ -2,7 +2,11 @@ package org.openmrs.module.rgrta.hl7.mckesson;
 
 import java.util.Properties;
 
+import org.openmrs.PatientIdentifier;
+import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
+import org.openmrs.api.PersonService;
+import org.openmrs.api.context.Context;
 import org.openmrs.module.rgrta.hibernateBeans.Encounter;
 import org.openmrs.module.sockethl7listener.util.Util;
 
@@ -88,10 +92,11 @@ public class HL7MessageConstructor extends org.openmrs.module.sockethl7listener.
 
 		PV1 pv1 = super.AddSegmentPV1(enc);
 		String poc = "";
-		// Accession number
+		PersonService personService = Context.getPersonService();
+		
 		try {
 			
-			PersonAttribute pocAttr = enc.getProvider().getAttribute("POC");
+		/*	PersonAttribute pocAttr = enc.getProvider().getAttribute("POC");
 			if (pocAttr != null) {
 				poc = pocAttr.getValue();
 				if (poc != null && !poc.equals("")) {
@@ -102,6 +107,7 @@ public class HL7MessageConstructor extends org.openmrs.module.sockethl7listener.
 
 			}
 			
+			
 			if (props != null){
 				String useClinicAsProvider = props.getProperty("use_clinic_as_provider");
 				if (useClinicAsProvider != null && useClinicAsProvider.equalsIgnoreCase("true")) {
@@ -111,6 +117,29 @@ public class HL7MessageConstructor extends org.openmrs.module.sockethl7listener.
 					pv1.getVisitNumber().getIDNumber().setValue("");
 				}
 			}
+			*/
+			
+			Integer userId = enc.getProvider().getUserId();
+			Person providerPerson = personService.getPerson(userId);
+			String providerId = null;
+			String providerFirstName = null;
+			String providerLastName = null;
+			if (providerPerson != null) {
+				PersonAttribute pa = providerPerson.getAttribute("Provider ID");
+				if (pa != null){
+					providerId = pa.getValue();
+				}
+				
+				providerFirstName = providerPerson.getGivenName();
+				providerLastName = providerPerson.getFamilyName();
+			}
+			
+			//hl7 will have destination practice or pcp in PV1-7, so we can
+			//get the location for D4D from the provider.
+			pv1.getAttendingDoctor(0).getFamilyName().getSurname().setValue(providerLastName);
+			pv1.getAttendingDoctor(0).getGivenName().setValue(providerFirstName);
+			pv1.getAttendingDoctor(0).getIDNumber().setValue(providerId);
+
 			
 		} catch (DataTypeException e) {
 			// TODO Auto-generated catch block
@@ -131,6 +160,11 @@ public class HL7MessageConstructor extends org.openmrs.module.sockethl7listener.
 
 	public void setFormInstance(String formInstance) {
 		this.formInstance = formInstance;
+	}
+	
+	public void setAssignAuthority(PatientIdentifier pi) {
+		
+		super.setAssignAuthority(pi);
 	}
 
 	

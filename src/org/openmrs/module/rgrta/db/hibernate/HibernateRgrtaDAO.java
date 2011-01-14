@@ -46,6 +46,7 @@ import org.openmrs.module.rgrta.hibernateBeans.StudyAttributeValue;
 import org.openmrs.module.rgrta.hibernateBeans.Wtageinf;
 import org.openmrs.module.chirdlutil.hibernateBeans.LocationTagAttributeValue;
 import org.openmrs.module.chirdlutil.util.Util;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Hibernate implementation of Rgrta database methods.
@@ -53,6 +54,7 @@ import org.openmrs.module.chirdlutil.util.Util;
  * @author Tammy Dugan
  * 
  */
+@Transactional
 public class HibernateRgrtaDAO implements RgrtaDAO
 {
 

@@ -3,16 +3,24 @@
  */
 package org.openmrs.module.rgrta.hl7.mckesson;
 
+import java.util.Date;
+
 import org.openmrs.PersonName;
 import org.openmrs.module.rgrta.hl7.ZVX;
+import org.openmrs.module.rgrta.hl7.ZPV;
 import org.openmrs.module.chirdlutil.util.Util;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.FN;
 import ca.uhn.hl7v2.model.v25.datatype.ST;
+import ca.uhn.hl7v2.model.v25.datatype.TS;
 import ca.uhn.hl7v2.model.v25.datatype.XCN;
+import ca.uhn.hl7v2.model.v25.message.ADT_A01;
+import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.IN1;
+import ca.uhn.hl7v2.model.v25.segment.MSH;
+import ca.uhn.hl7v2.model.v25.segment.OBR;
 import ca.uhn.hl7v2.model.v25.segment.PV1;
 
 /**
@@ -75,6 +83,45 @@ public class HL7EncounterHandler25 extends
 		return name;
 	}
 	
+	@Override
+	public Date getEncounterDate(Message message) {
+		TS timeStamp = null;
+		Date datetime = null;
+
+		try {
+			PV1 pv1 = getPV1(message);
+			MSH msh = getMSH(message);
+			OBR obr = getOBR(message, 0);
+			timeStamp = null;
+			
+			if (message instanceof ORU_R01) {
+				if (obr != null)
+					timeStamp = msh.getDateTimeOfMessage();
+			} else if ((message instanceof ADT_A01)) {
+				if (pv1 != null)
+					timeStamp = pv1.getAdmitDateTime();
+			}
+			 if (timeStamp == null || timeStamp.getTime()== null || timeStamp.getTime().getValue() == null){
+				 if (msh != null){
+					 timeStamp = msh.getDateTimeOfMessage();
+			 	}
+			 }
+			
+			if (timeStamp != null && timeStamp.getTime()!= null) { 
+				datetime = TranslateDate(timeStamp);
+			}else {
+				logger.error("A valid encounter date time stamp could not be " +
+						"determined from PV1 (for ADT messages), OBR (for ORU messages)," +
+						" or MSH segments");
+			}
+			
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+
+		return datetime;
+
+	}
 	//for mckesson messages, printerLocation prefixed by 'PEDS'
 	//RGRTA has no ZPV segment
 	/*@Override

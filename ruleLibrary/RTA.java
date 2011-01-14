@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - RTA.mlm on Thu Aug 12 13:37:53 EDT 2010
+ Translated from - RTA.mlm on Wed Oct 27 11:02:23 EDT 2010
 
  Title:  RTA
  Filename:  RTA
@@ -159,7 +159,7 @@ public class RTA implements Rule, DssRule{
 
 	/*** @see org.openmrs.module.dss.DssRule#getAction()*/
 	public String getAction(){
-		return "If call call endif If call endif";
+		return "If call endif If call endif";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getAgeMin()*/
@@ -259,38 +259,38 @@ return false;
 				Object value = null;
 				String variable = null;
 				int varLen = 0;
-		if(asthma_cohort.exists()){
-				varLen = "Asthma_Physician_Alert".length();
-				value=userVarMap.get("Asthma_Physician_Alert");
+		if((!asthma_cohort.isNull()&&asthma_cohort.toString().equalsIgnoreCase("true"))){
+				varLen = "Asthma_Alert".length();
+				value=userVarMap.get("Asthma_Alert");
 				if(value != null){
 					parameters.put("param1",value);
 				}
 				// It must be a result value or date
-				else if("Asthma_Physician_Alert".endsWith("_value"))
+				else if("Asthma_Alert".endsWith("_value"))
 				{
-					variable = "Asthma_Physician_Alert".substring(0, varLen-6); // -6 for _value
+					variable = "Asthma_Alert".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("Asthma_Physician_Alert".endsWith("_date"))
+				else if("Asthma_Alert".endsWith("_date"))
 				{
-					variable = "Asthma_Physician_Alert".substring(0, varLen-5); // -5 for _date
+					variable = "Asthma_Alert".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("Asthma_Physician_Alert".endsWith("_object"))
+				else if("Asthma_Alert".endsWith("_object"))
 				{
-					variable = "Asthma_Physician_Alert".substring(0, varLen-7); // -5 for _object
+					variable = "Asthma_Alert".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("Asthma_Physician_Alert") != null){
-						value = resultLookup.get("Asthma_Physician_Alert").toString();
+					if (resultLookup.get("Asthma_Alert") != null){
+						value = resultLookup.get("Asthma_Alert").toString();
 					}
 				}
 				if(value != null){
@@ -298,52 +298,11 @@ return false;
 				}
 				else
 				{
-					parameters.put("param1","Asthma_Physician_Alert");
-				}
-				logicService.eval(patient, "CREATE_JIT",parameters);
-								varLen = "Asthma_Patient_Alert".length();
-				value=userVarMap.get("Asthma_Patient_Alert");
-				if(value != null){
-					parameters.put("param1",value);
-				}
-				// It must be a result value or date
-				else if("Asthma_Patient_Alert".endsWith("_value"))
-				{
-					variable = "Asthma_Patient_Alert".substring(0, varLen-6); // -6 for _value
-					if (resultLookup.get(variable) != null){
-						value = resultLookup.get(variable).toString();
-					}
-				}
-				else if("Asthma_Patient_Alert".endsWith("_date"))
-				{
-					variable = "Asthma_Patient_Alert".substring(0, varLen-5); // -5 for _date
-					if (resultLookup.get(variable) != null){
-						value = resultLookup.get(variable).getResultDate().toString();
-					}
-				}
-				else if("Asthma_Patient_Alert".endsWith("_object"))
-				{
-					variable = "Asthma_Patient_Alert".substring(0, varLen-7); // -5 for _object
-					if (resultLookup.get(variable) != null){
-						value = resultLookup.get(variable);
-					}
-				}
-				else
-				{
-					if (resultLookup.get("Asthma_Patient_Alert") != null){
-						value = resultLookup.get("Asthma_Patient_Alert").toString();
-					}
-				}
-				if(value != null){
-					parameters.put("param1",value);
-				}
-				else
-				{
-					parameters.put("param1","Asthma_Patient_Alert");
+					parameters.put("param1","Asthma_Alert");
 				}
 				logicService.eval(patient, "CREATE_JIT",parameters);
 				}
-		if(diabetes_suspected.exists()){
+		if((!diabetes_suspected.isNull()&&diabetes_suspected.toString().equalsIgnoreCase("true"))){
 				varLen = "Diabetes_Care_Worksheet".length();
 				value=userVarMap.get("Diabetes_Care_Worksheet");
 				if(value != null){

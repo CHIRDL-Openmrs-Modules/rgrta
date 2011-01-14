@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - Diabetes_LDLc.mlm on Thu Aug 05 11:24:57 EDT 2010
+ Translated from - Diabetes_LDLc.mlm on Thu Dec 02 14:00:56 EST 2010
 
  Title:  Diabetes_LDLc
  Filename:  Diabetes_LDLc
@@ -154,12 +154,12 @@ public class Diabetes_LDLc implements Rule, DssRule{
 
 	/*** @see org.openmrs.module.dss.DssRule#getLogic()*/
 	public String getLogic(){
-		return "If call call call call call call call call call call conclude endif";
+		return "If call call call call call call call call call call call call conclude endif";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getAction()*/
 	public String getAction(){
-		return "write write";
+		return "write write write write";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getAgeMin()*/
@@ -1880,6 +1880,90 @@ return false;
 				}
 				Result finalResult = logicService.eval(patient, "mostRecentResult",parameters);
 				resultLookup.put("finalResult",finalResult);
+				varLen = "finalResult_object".length();
+				value=userVarMap.get("finalResult_object");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("finalResult_object".endsWith("_value"))
+				{
+					variable = "finalResult_object".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResult_object".endsWith("_date"))
+				{
+					variable = "finalResult_object".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResult_object".endsWith("_object"))
+				{
+					variable = "finalResult_object".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResult_object") != null){
+						value = resultLookup.get("finalResult_object").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","finalResult_object");
+				}
+				Result finalResultConceptName = logicService.eval(patient, "conceptNameResult",parameters);
+				resultLookup.put("finalResultConceptName",finalResultConceptName);
+				varLen = "finalResultConceptName".length();
+				value=userVarMap.get("finalResultConceptName");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("finalResultConceptName".endsWith("_value"))
+				{
+					variable = "finalResultConceptName".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResultConceptName".endsWith("_date"))
+				{
+					variable = "finalResultConceptName".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResultConceptName".endsWith("_object"))
+				{
+					variable = "finalResultConceptName".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResultConceptName") != null){
+						value = resultLookup.get("finalResultConceptName").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","finalResultConceptName");
+				}
+				Result finalResultUnits = logicService.eval(patient, "getConceptUnits",parameters);
+				resultLookup.put("finalResultUnits",finalResultUnits);
 			return true;
 		}
 	return false;	}
@@ -1888,6 +1972,8 @@ return false;
 		this.actions = new ArrayList<String>();
 		actions.add("|| finalResult_date ||@ldlcResultDate");
 		actions.add("|| finalResult_value ||@ldlcResultValue");
+		actions.add("|| finalResultConceptName_value ||@ldlcConceptName");
+		actions.add("|| finalResultUnits_value ||@ldlResultUnit");
 	}
 
 private String substituteString(String variable,String outStr){

@@ -45,60 +45,62 @@ public class Randomize implements ProcessStateAction
 		PatientService patientService = Context.getPatientService();
 		Integer patientId = patient.getPatientId();
 		patient = patientService.getPatient(patientId);
-		
+
 		Integer locationTagId = patientState.getLocationTagId();
 		Integer locationId = patientState.getLocationId();
-		
+
 		RgrtaService RgrtaService = Context
-				.getService(RgrtaService.class);
+		.getService(RgrtaService.class);
 		ATDService atdService = Context
-				.getService(ATDService.class);
+		.getService(ATDService.class);
 		State currState = patientState.getState();
 		Integer sessionId = patientState.getSessionId();
-		
+
 		Session session = atdService.getSession(sessionId);
 		Integer encounterId = session.getEncounterId();
 		List<Study> activeStudies = RgrtaService.getActiveStudies();
 
-		for (Study currActiveStudy : activeStudies)
-		{
-			StudyAttributeValue studyAttributeValue = RgrtaService
-					.getStudyAttributeValue(currActiveStudy,
-							"Custom Randomizer");
-
-			Randomizer randomizer = null;
-
-			if (studyAttributeValue != null)
+		if (activeStudies !=  null){
+			for (Study currActiveStudy : activeStudies)
 			{
-				String randomizerClassName = "org.openmrs.module.rgrta.randomizer."+
+				StudyAttributeValue studyAttributeValue = RgrtaService
+				.getStudyAttributeValue(currActiveStudy,
+						"Custom Randomizer");
+
+				Randomizer randomizer = null;
+
+				if (studyAttributeValue != null)
+				{
+					String randomizerClassName = "org.openmrs.module.rgrta.randomizer."+
 					studyAttributeValue.getValue();
 
-				try
+					try
+					{
+						Class theClass = Class.forName(randomizerClassName);
+						randomizer = (Randomizer) theClass.newInstance();
+					} catch (Exception e)
+					{
+						log.error("Error creating custom randomizer: "
+								+ randomizerClassName);
+						log.error(e.getMessage());
+						log.error(org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
+					}
+				} else
 				{
-					Class theClass = Class.forName(randomizerClassName);
-					randomizer = (Randomizer) theClass.newInstance();
-				} catch (Exception e)
-				{
-					log.error("Error creating custom randomizer: "
-							+ randomizerClassName);
-					log.error(e.getMessage());
-					log.error(org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
+					randomizer = new BasicRandomizer();
 				}
-			} else
-			{
-				randomizer = new BasicRandomizer();
-			}
 
-			if (randomizer != null)
-			{
-				EncounterService encounterService = Context.getService(EncounterService.class);
-				randomizer.randomize(currActiveStudy, patient, encounterService.getEncounter(encounterId));
+				if (randomizer != null)
+				{
+					EncounterService encounterService = Context.getService(EncounterService.class);
+					randomizer.randomize(currActiveStudy, patient, encounterService.getEncounter(encounterId));
+				}
 			}
 		}
 		StateManager.endState(patientState);
 		RgrtaStateActionHandler.changeState(patient, sessionId, currState,
 				stateAction,parameters,locationTagId,locationId);
-
+		
 	}
 
 	public void changeState(PatientState patientState,

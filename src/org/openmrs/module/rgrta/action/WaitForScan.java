@@ -9,8 +9,10 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Form;
+import org.openmrs.Location;
 import org.openmrs.Patient;
 import org.openmrs.api.FormService;
+import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.atd.StateManager;
@@ -45,6 +47,7 @@ public class WaitForScan implements ProcessStateAction {
 			PatientState patientState, HashMap<String, Object> parameters){
 		// lookup the patient again to avoid lazy initialization errors
 		PatientService patientService = Context.getPatientService();
+		LocationService locationService = Context.getLocationService();
 		Integer patientId = patient.getPatientId();
 		patient = patientService.getPatient(patientId);
 
@@ -67,6 +70,13 @@ public class WaitForScan implements ProcessStateAction {
 		atdService.updatePatientState(patientState);
 		TeleformFileState teleformFileState = TeleformFileMonitor
 				.addToPendingStatesWithoutFilename(formInstance);
+		
+		Location defaultLocation = locationService.getLocation("Default Location");
+		Integer defaultLocationId = 1;
+		if (defaultLocation != null){
+			defaultLocationId = defaultLocation.getLocationId();
+		} 
+		patientState.setLocationId(defaultLocationId);
 		teleformFileState.addParameter("patientState", patientState);
 	}
 
@@ -95,13 +105,14 @@ public class WaitForScan implements ProcessStateAction {
 			Form form = formService.getForm(formId);
 			String formName = form.getName();
 			
-			List<Statistics> statistics = rgrtaService.getStatByFormInstance(
+			/*List<Statistics> statistics = rgrtaService.getStatByFormInstance(
 				formInstance.getFormInstanceId(), formName, patientState.getLocationId());
-
+			 
 			for (Statistics currStat : statistics) {
 				currStat.setScannedTimestamp(patientState.getEndTime());
 				rgrtaService.updateStatistics(currStat);
 			}
+			*/
 
 			RgrtaStateActionHandler.changeState(patientState.getPatient(), patientState.getSessionId(),
 					patientState.getState(), patientState.getState()

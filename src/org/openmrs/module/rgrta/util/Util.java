@@ -186,7 +186,7 @@ public class Util
 			obs.setObsDatetime(obsDate);
 			obsService.saveObs(obs, null);
 			
-			if (ruleId != null)
+			/*if (ruleId != null)
 			{
 				List<Statistics> statistics = rgrtaService.getStatByIdAndRule(
 						formInstanceId, ruleId, formName,locationId);
@@ -227,7 +227,7 @@ public class Util
 					stat.setScannedTimestamp(oldStat.getScannedTimestamp());
 				}
 				rgrtaService.createStatistics(stat);
-			}
+			}*/
 		}
 	}
 	

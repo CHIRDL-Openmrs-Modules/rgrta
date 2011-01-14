@@ -1,4 +1,4 @@
-package org.openmrs.module.atd.ruleLibrary;
+package org.openmrs.module.rgrta.rule;
 
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +39,6 @@ public class providerName implements Rule
 
 		if (encounterId != null)
 		{
-			
 			encounter = encounterService.getEncounter(encounterId);
 			User provider = encounter.getProvider();
 			if(provider != null)

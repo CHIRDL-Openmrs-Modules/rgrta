@@ -126,15 +126,39 @@ finalResult:= call mostRecentResult With "micro_1_object","micro_2_object","micr
 "micro_18_object","micro_19_object","micro_20_object","micro_21_object","micro_22_object","micro_23_object",
 "micro_24_object","micro_25_object","micro_26_object","micro_27_object","micro_28_object","micro_29_object",
 "micro_30_object","micro_31_object","micro_32_object","micro_33_object","micro_34_object";  
+
+finalResults = call getAllWithSameDate With "finalResult_object","micro_1_object","micro_2_object","micro_3_object","micro_4_object",
+"micro_5_object","micro_6_object","micro_7_object","micro_8_object","micro_9_object","result1_object","result2_object",
+"result3_object","result4_object","result5_object","result6_object","micro_10_object","micro_11_object",
+"micro_12_object","micro_13_object","micro_14_object","micro_15_object","micro_16_object","micro_17_object",
+"micro_18_object","micro_19_object","micro_20_object","micro_21_object","micro_22_object","micro_23_object",
+"micro_24_object","micro_25_object","micro_26_object","micro_27_object","micro_28_object","micro_29_object",
+"micro_30_object","micro_31_object","micro_32_object","micro_33_object","micro_34_object";
+
+element1 = call getResultElement With "0","finalResults_object";
+finalResultConceptName1:= call conceptNameResult With "element1_object";
+finalResultUnits1:= call getConceptUnits with "finalResultConceptName1";
+
+element2 = call getResultElement With "1","finalResults_object";
+finalResultConceptName2:= call conceptNameResult With "element2_object";
+finalResultUnits2:= call getConceptUnits with "finalResultConceptName2";
+
 conclude true;
+
 
 endif
 ;;
 Action:
 
-write ("|| finalResult_date ||") At microResultDate;
-write ("|| finalResult_value ||") At microResultValue;
-                                                                                                                                                                                                                                                                            
+write ("|| element1_date ||") At microResultDate1;
+write ("|| element1_value ||") At microResultValue1;
+write ("|| finalResultConceptName1_value ||") At microConceptName1;           
+write ("|| finalResultUnits1_value ||") At microResultUnit1;        
+
+write ("|| element2_date ||") At microResultDate2;
+write ("|| element2_value ||") At microResultValue2;
+write ("|| finalResultConceptName2_value ||") At microConceptName2;           
+write ("|| finalResultUnits2_value ||") At microResultUnit2;                                                                                                                                                                                                                                                                   
 ;;
 Age_Min: 0 years;;
 Age_Max: 100 years;;

@@ -15,11 +15,13 @@ import org.openmrs.User;
 import org.openmrs.api.db.DAOException;
 import org.openmrs.module.rgrta.db.EncounterDAO;
 import org.openmrs.module.rgrta.hibernateBeans.Encounter;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author Tammy Dugan
  * 
  */
+@Transactional
 public class HibernateEncounterDAO extends
 		org.openmrs.api.db.hibernate.HibernateEncounterDAO implements
 		EncounterDAO

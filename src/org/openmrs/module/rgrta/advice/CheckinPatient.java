@@ -11,12 +11,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.openmrs.Concept;
+import org.openmrs.EncounterType;
 import org.openmrs.Location;
 import org.openmrs.LocationTag;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
+import org.openmrs.api.LocationService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.atd.StateManager;
@@ -25,8 +27,8 @@ import org.openmrs.module.atd.hibernateBeans.Session;
 import org.openmrs.module.atd.service.ATDService;
 import org.openmrs.module.rgrta.RgrtaStateActionHandler;
 import org.openmrs.module.rgrta.hibernateBeans.Encounter;
-import org.openmrs.module.rgrta.service.RgrtaService;
 import org.openmrs.module.rgrta.service.EncounterService;
+import org.openmrs.module.rgrta.service.RgrtaService;
 import org.openmrs.module.rgrta.util.Util;
 
 /**
@@ -60,6 +62,7 @@ public class CheckinPatient implements Runnable
 					.getGlobalProperty("scheduler.password"));
 			ATDService atdService = Context
 					.getService(ATDService.class);
+			LocationService locationService = Context.getLocationService();
 
 			Patient patient = this.encounter.getPatient();
 			Hibernate.initialize(patient); //fully initialize the patient to
@@ -82,21 +85,19 @@ public class CheckinPatient implements Runnable
 			org.openmrs.module.rgrta.hibernateBeans.Encounter RgrtaEncounter = (Encounter) encounterService
 					.getEncounter(this.encounter.getEncounterId());
 			String printerLocation = RgrtaEncounter.getPrinterLocation();
-			if (printerLocation != null)
-			{
-				Location location = this.encounter.getLocation();
-				Set<LocationTag> tags = location.getTags();
-				for(LocationTag tag:tags){
-					if(printerLocation.equalsIgnoreCase(tag.getTag())){
-						locationTagId = tag.getLocationTagId();
-						locationId = location.getLocationId();
-						break;
-					}
-				}
+			Location location = this.encounter.getLocation();
+		
+			Set<LocationTag> tags = location.getTags();
+			for(LocationTag tag:tags){
+					locationTagId = tag.getLocationTagId();
+					locationId = location.getLocationId();
+					break;
 			}
 		
 			saveInsuranceInfo(encounterId, patient,locationTagId);
-			Program program = atdService.getProgram(locationTagId,locationId);
+			EncounterType encType = RgrtaEncounter.getEncounterType();
+			Program program = atdService.getProgramByNameVersion("rgrta", "1.0");
+			
 			StateManager.changeState(patient, sessionId, null,
 					program,null,
 					locationTagId,locationId,RgrtaStateActionHandler.getInstance());

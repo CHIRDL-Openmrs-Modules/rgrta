@@ -6,12 +6,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -34,11 +35,12 @@ import org.openmrs.ConceptNumeric;
 import org.openmrs.ConceptSet;
 import org.openmrs.ConceptSource;
 import org.openmrs.Form;
-import org.openmrs.LocationTag;
 import org.openmrs.Location;
+import org.openmrs.LocationTag;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
+import org.openmrs.PatientIdentifierType;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
@@ -46,22 +48,21 @@ import org.openmrs.api.FormService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.atd.hibernateBeans.ATDError;
 import org.openmrs.module.atd.hibernateBeans.FormAttributeValue;
 import org.openmrs.module.atd.hibernateBeans.FormInstance;
 import org.openmrs.module.atd.hibernateBeans.PatientState;
 import org.openmrs.module.atd.service.ATDService;
-import org.openmrs.module.atd.hibernateBeans.ATDError;
+import org.openmrs.module.chirdlutil.util.Base64;
+import org.openmrs.module.chirdlutil.util.FileDateComparator;
+import org.openmrs.module.chirdlutil.util.FileListFilter;
+import org.openmrs.module.chirdlutil.util.IOUtil;
+import org.openmrs.module.rgrta.hibernateBeans.Encounter;
 import org.openmrs.module.rgrta.hibernateBeans.RgrtaHL7Export;
 import org.openmrs.module.rgrta.hibernateBeans.RgrtaHL7ExportMap;
-import org.openmrs.module.rgrta.hibernateBeans.Encounter;
-import org.openmrs.module.chirdlutil.hibernateBeans.LocationAttributeValue;
-import org.openmrs.module.chirdlutil.hibernateBeans.LocationTagAttributeValue;
-import org.openmrs.module.chirdlutil.service.ChirdlUtilService;
-import org.openmrs.module.rgrta.service.RgrtaService;
 import org.openmrs.module.rgrta.service.EncounterService;
+import org.openmrs.module.rgrta.service.RgrtaService;
 import org.openmrs.module.rgrta.util.Util;
-import org.openmrs.module.chirdlutil.util.Base64;
-import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.sockethl7listener.HL7MessageConstructor;
 import org.openmrs.module.sockethl7listener.HL7SocketHandler;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
@@ -234,8 +235,14 @@ public class HL7Exporter extends AbstractTask {
 				queryEncounterList.add(openmrsEncounter);
 			
 				constructor.AddSegmentMSH(openmrsEncounter);
+				Patient patient = openmrsEncounter.getPatient();
+				if (patient == null){
+					return;
+				}
+				PatientIdentifier identifier = patient.getPatientIdentifier();
 				constructor.AddSegmentPID(openmrsEncounter.getPatient());
 				constructor.AddSegmentPV1(openmrsEncounter);
+				constructor.setAssignAuthority(identifier);
 				
 			
 				if (!addOBXForTiff(constructor, openmrsEncounter , formId, null, 
@@ -663,7 +670,7 @@ public class HL7Exporter extends AbstractTask {
 		
 		
 		ATDService atdService = Context.getService(ATDService.class);
-		Location loc= locService.getLocation("Unknown Location");
+		Location loc= locService.getLocation("Default Location");
 		LocationTag  locTag = locService.getLocationTagByName("Default Location Tag");
 		locId = loc.getLocationId();
 		locTagId = locTag.getLocationTagId();
@@ -819,15 +826,22 @@ public class HL7Exporter extends AbstractTask {
 			if (formDir == null || formDir.equals("")){
 				return false;
 			}
-			filename = "_" + formLocationId + "-" + formId + "-" + formInstanceId + "_";
-			File file = new File(formDir + filename + ".pdf");
-			if (!file.exists()){
+			filename = formLocationId + "-" + formId + "-" + formInstanceId;
+			
+			//This FilenameFilter will get ALL tifs starting with the filename
+			//including of rescan versions nnn_1.tif, nnn_2.tif, etc
+			FilenameFilter filtered = new FileListFilter(filename, "pdf");
+			File dir = new File(formDir);
+			File[] files = dir.listFiles(filtered); 
+			if (files == null || files.length == 0){
 				return false;
 			}
-			encodedForm = encodeForm(file);
-			if (encodedForm == null){
-				return false;
-			}
+			
+			//This FileDateComparator will list in order
+			//with newest file first.
+			Arrays.sort(files, new FileDateComparator());
+		
+			encodedForm = encodeForm(files[0]);
 				
 			int orderRep = 0;
 			

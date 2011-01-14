@@ -56,6 +56,11 @@ public class RgrtaParameterHandler implements ParameterHandler
 		{
 			processPWSParameters(parameters,fieldMap);
 		}
+		
+		if (ruleType.equalsIgnoreCase("Asthma_JIT"))
+		{
+			processPWSParameters(parameters,fieldMap);
+		}
 	}
 
 	private void processPSFParameters(Map<String, Object> parameters,

@@ -19,8 +19,8 @@ Data:
 
 mode:=read {mode from Parameters};
 If (mode = PRODUCE) then   
-asthma_cohort := read exist {ASTHMA_COHORT from RMRS};    
-diabetes_suspected := read exist {DIABETES_COHORT from RMRS};      
+asthma_cohort := read last {ASTHMA_COHORT from RMRS};    
+diabetes_suspected := read last {DIABETES_COHORT from RMRS};      
 endif
 
 ;;
@@ -41,8 +41,7 @@ endif
 Action:
 
 If(asthma_cohort = True) then
-call CREATE_JIT with "Asthma_Physician_Alert";  
-call CREATE_JIT with "Asthma_Patient_Alert";
+call CREATE_JIT with "Asthma_Alert";  
 endif;
 
 If(diabetes_suspected = True) then

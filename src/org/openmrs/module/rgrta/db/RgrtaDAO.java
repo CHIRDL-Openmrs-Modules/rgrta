@@ -20,6 +20,7 @@ import org.openmrs.module.rgrta.hibernateBeans.PatientFamily;
 import org.openmrs.module.rgrta.hibernateBeans.Statistics;
 import org.openmrs.module.rgrta.hibernateBeans.Study;
 import org.openmrs.module.rgrta.hibernateBeans.StudyAttributeValue;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
@@ -28,6 +29,7 @@ import org.openmrs.module.rgrta.hibernateBeans.StudyAttributeValue;
  * @author Tammy Dugan
  * @version 1.0
  */
+//@Transactional
 public interface RgrtaDAO {
 
 	

@@ -13,27 +13,33 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.Concept;
+import org.openmrs.ConceptName;
+import org.openmrs.EncounterType;
 import org.openmrs.Location;
 import org.openmrs.LocationTag;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
-import org.openmrs.Concept;
-import org.openmrs.ConceptName;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PersonAttribute;
+import org.openmrs.PersonName;
+import org.openmrs.Role;
+import org.openmrs.User;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
+import org.openmrs.api.PersonService;
+import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.logic.LogicService;
+import org.openmrs.module.atd.TeleformFileState;
 import org.openmrs.module.atd.hibernateBeans.ATDError;
-import org.openmrs.module.atd.hibernateBeans.PatientState;
 import org.openmrs.module.atd.hibernateBeans.Session;
-import org.openmrs.module.atd.hibernateBeans.State;
 import org.openmrs.module.atd.service.ATDService;
 import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.chirdlutil.util.Util;
@@ -236,6 +242,10 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 	//search for patient based on medical record number then
 	//run alias query to see if any patient records to merge
 	@Override
+	/*
+	 * @should update new telephone number
+	 * 
+	 */
 	public Patient findPatient(Patient hl7Patient, Date encounterDate,HashMap<String,Object> parameters)
 	{
 		Patient resultPatient = null;
@@ -311,6 +321,9 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 
 	}
 
+	/*
+	 * @should get location id from encounter
+	 */
 	private Integer getLocationTagId(Encounter encounter)
 	{
 		if (encounter != null)
@@ -331,6 +344,7 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 		}
 		return null;
 	}
+	
 	
 	private Integer getLocationId(Encounter encounter)
 	{
@@ -526,13 +540,15 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 		
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
-		if (provider.createUserForProvider(provider) == null){
+		User user = createUserForProvider(provider);
+		if (user == null){
 			logger.error("Could not create a user or find an existing user for provider: firstname=" 
 					+ provider.getFirstName() + " lastname=" + provider.getLastName() + "id=" 
 					+ provider.getId()  );
 			return null;
 		}
-		 
+		provider.setUserId(user.getUserId());
+		
 		Patient resultPatient = findPatient(patient,encounterDate,parameters);	
 		if (resultPatient == null || resultPatient.getPatientId() == null){
 			hl7ListService.setHl7Message(0, 0, incomingMessageString, false, false, this.getPort());
@@ -607,21 +623,35 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 			e.printStackTrace();
 		}
 		
+		HashMap<String, Set<Obs>> regenObsMap = 
+			xmlDatasource.getRegenObs(resultPatient.getPatientId());
 
 		if (message instanceof ca.uhn.hl7v2.model.v25.message.ORU_R01){
-			
-			
-			HashMap<String, Set<Obs>> regenObsMap = 
-				xmlDatasource.getRegenObs(resultPatient.getPatientId());
+		
 			String conceptName = "DIABETES_COHORT";
 			Obs newObs = CreateObservation(enc, resultPatient, conceptName, 
 					"TRUE");
 			Set<Obs> obs = new HashSet<Obs>();
 			obs.add(newObs);
 			regenObsMap.put(conceptName,obs );
+			
 		
-		//	Util.saveObs(enc.getPatient(), cs.getConceptByName("DIABETES_COHORT"), 
-		//		enc.getEncounterId(), "TRUE");
+			//add to obs table too
+			Util.saveObs(enc.getPatient(), cs.getConceptByName("DIABETES_COHORT"), 
+				enc.getEncounterId(), "TRUE");
+		}
+		ConceptService conceptService = Context.getConceptService();
+		Set<Obs> asthmaCohorts = regenObsMap.get("ASTHMA_COHORT");
+		
+		if (asthmaCohorts != null && !asthmaCohorts.isEmpty()){
+			Concept asthmaConcept = conceptService.getConceptByName("ASTHMA_COHORT");
+			if (asthmaConcept != null){
+				Util.saveObs(enc.getPatient(), asthmaConcept, enc.getEncounterId(), 
+				"TRUE");
+				
+			} else {
+				log.error("Asthma cohort concept does not exist.");
+			}
 		}
 		
 		return null;
@@ -683,52 +713,50 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 					RgrtaEncounter.setPrinterLocation(printerLocation);
 				}
 
-				if (locationString != null)
-				{
-					Location location = locationService
-							.getLocation(locationString);
+				//Use default so that we don't store location
+				Location location = locationService
+							.getLocation("Default Location");
 
-					if (location == null)
-					{
-						location = new Location();
-						location.setName(locationString);
-						locationService.saveLocation(location);
-						logger.warn("Location '" + locationString
-								+ "' does not exist in the Location table."
-								+ "a new location was created for '"
-								+ locationString + "'");
+				if (location == null)
+				{
+					location = new Location();
+					location.setName("Default Location");
+					
+					LocationTag locTag = locationService.getLocationTagByName("Default Location Tag");
+					location.addTag(locTag);
+					locationService.saveLocation(location);
+					
+					logger.warn("Location '" + locationString
+							+ "' does not exist in the Location table."
+							+ "a new location was created for '"
+							+ locationString + "'");
+				}
+				if (message instanceof ADT_A01){
+
+					List<EncounterType> encTypes = encounterService.getAllEncounterTypes(); 
+					Iterator<EncounterType> it = encTypes.iterator();
+					String name = null;
+					EncounterType encounterType = null;
+					for (EncounterType encType : encTypes){
+						if (encType != null){
+							name = encType.getName();
+							if (name != null && name.equalsIgnoreCase("hl7Message_ER")){
+								encounterType = encType;
+								break;
+							}
+						}
+					  	
 					}
+					
+					if (encounterType == null){
+						encounterType = new EncounterType("hl7Message_ER", "Hl7 message for an Emergency Room encounter");
+					}
+					encounterService.saveEncounterType(encounterType);
+					RgrtaEncounter.setEncounterType(encounterType);
+					
+				}
 
 					RgrtaEncounter.setLocation(location);
-				}
-					//This code must come after the code that sets the encounter values
-					//because the states can't be created until the locationTagId and 
-					//locationId have been set
-					State state = atdService.getStateByName("Clinic Registration");
-					PatientState patientState = atdService.addPatientState(p, state, 
-							getSession(parameters).getSessionId(),getLocationTagId(RgrtaEncounter),
-							getLocationId(RgrtaEncounter));
-					patientState.setStartTime(RgrtaEncounter.getEncounterDatetime());
-					patientState.setEndTime(RgrtaEncounter.getEncounterDatetime());
-					atdService.updatePatientState(patientState);
-					
-					state = atdService.getStateByName("Process Checkin HL7");
-					patientState = atdService.addPatientState(p, state, getSession(parameters).getSessionId(),
-							getLocationTagId(RgrtaEncounter),getLocationId(RgrtaEncounter));
-					Date processCheckinHL7Start = (Date) parameters.get("processCheckinHL7Start");
-					Date processCheckinHL7End = (Date) parameters.get("processCheckinHL7End");
-					patientState.setStartTime(processCheckinHL7Start);
-					patientState.setEndTime(processCheckinHL7End);
-					atdService.updatePatientState(patientState);
-
-					state = atdService.getStateByName("QUERY KITE Alias");
-					patientState = atdService.addPatientState(p, state, getSession(parameters).getSessionId(),
-							getLocationTagId(RgrtaEncounter),getLocationId(RgrtaEncounter));
-					Date queryKiteAliasStart = (Date) parameters.get("queryKiteAliasStart");
-					Date queryKiteAliasEnd = (Date) parameters.get("queryKiteAliasEnd");
-					patientState.setStartTime(queryKiteAliasStart);
-					patientState.setEndTime(queryKiteAliasEnd);
-					atdService.updatePatientState(patientState);
 				
 					encounterService.saveEncounter(RgrtaEncounter);
 					
@@ -759,6 +787,119 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 		obs.setPerson(resultPatient);
 		
 		return obs;
+	}
+	
+	private User createUserForProvider(Provider provider){
+
+		User providerUser = null;
+		List<Role> roles = new ArrayList <Role> ();
+		User savedProviderUser = null;
+		String password = null;
+		boolean changed = false;
+		PersonService personService = Context.getPersonService();
+		UserService us = Context.getUserService();
+
+		try {
+
+			//set the username
+			String username = "";
+			String firstname = provider.getFirstName();
+			String lastname = provider.getLastName();
+			String userid = provider.getId();
+			String fn = "";
+			String ln = "";
+
+			if(firstname == null){
+				firstname = "";
+			}
+			if(lastname == null){
+				lastname = "";
+			}
+			if(userid == null){
+				userid = "";
+			}
+			if(firstname.contains(" ")){
+				fn = firstname.replace(" ", "_");
+			}
+			else {
+				fn = firstname;
+			}
+			if(lastname.contains(" ")){
+				ln = lastname.replace(" ", "_");
+			}
+			else{
+				ln = lastname;
+			}
+
+
+			username = fn + "." + ln + "." + userid;
+
+			List<User> providers  = us.getAllUsers();
+			for (User prov : providers){
+				String provUserName = prov.getUsername();
+				if (provUserName != null && provUserName.equalsIgnoreCase(username)){
+					providerUser = prov;
+					continue;
+				}
+
+			}
+
+			if (providerUser == null){
+
+				providerUser = new User();
+				providerUser.setUsername(username);
+
+
+
+				//get existing provider or create password if no provider exists.
+
+				UUID uuid = UUID.randomUUID();
+				password = uuid.toString();
+				changed = true;
+
+
+				Role r = us.getRole("Provider");
+				providerUser.addRole(r); 
+
+
+
+				if (provider != null){
+
+					PersonName providerName = new PersonName(firstname, "", lastname);
+					providerName.isPreferred();
+					providerUser.addName(providerName);
+					providerUser.setGender("U");
+					providerUser.setVoided(false);
+
+					//Store the provider's id in the provider's person attribute.
+					PersonAttribute pattr = new PersonAttribute();
+					if (personService.getPersonAttributeTypeByName("Provider ID") != null&&
+							provider.getId()!=null && provider.getId().length()>0){
+						PersonAttribute attr = providerUser.getAttribute(
+								personService.getPersonAttributeTypeByName("Provider ID"));
+						//only update if this is truly a new attribute value
+						if (attr == null || !attr.getValue().equals(provider.getId())) {
+							pattr.setAttributeType(personService.getPersonAttributeTypeByName("Provider ID"));
+							pattr.setValue(provider.getId());
+							pattr.setCreator(Context.getAuthenticatedUser());
+							pattr.setDateCreated(new Date());
+							providerUser.addAttribute(pattr);
+						}
+					}
+				}
+
+			}
+
+
+			savedProviderUser = us.saveUser(providerUser, password);
+
+
+		} catch (Exception e){
+			log.error("Error while creating or updating a user for provider.", e);
+		}
+
+		return savedProviderUser;
+
 	}
 	
 	

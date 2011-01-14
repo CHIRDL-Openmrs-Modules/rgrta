@@ -12,6 +12,7 @@ import org.openmrs.module.rgrta.hl7.ZPV;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.FN;
+import ca.uhn.hl7v2.model.v25.datatype.IS;
 import ca.uhn.hl7v2.model.v25.datatype.ST;
 import ca.uhn.hl7v2.model.v25.datatype.XCN;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
@@ -105,7 +106,17 @@ public class HL7EncounterHandler25 extends
 	public String getLocation(Message message)
 	{
 		PV1 pv1 = getPV1(message);
-		return pv1.getAssignedPatientLocation().getPointOfCare().getValue();
+		IS building = pv1.getAssignedPatientLocation().getBuilding();
+		String location = null;
+		if (building != null){
+			location = building.getValue();
+			
+		}
+		else {
+			logger.error(" building is null");
+			location = pv1.getAssignedPatientLocation().getPointOfCare().getValue();
+		}
+		return location;
 	}
 
 	public String getPrinterLocation(Message message,String incomingMessageString)

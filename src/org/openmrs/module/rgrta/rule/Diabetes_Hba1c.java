@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - Diabetes_Hba1c.mlm on Thu Aug 05 11:25:00 EDT 2010
+ Translated from - Diabetes_Hba1c.mlm on Fri Sep 24 15:26:54 EDT 2010
 
  Title:  Diabetes Hba1c
  Filename:  Diabetes_Hba1c
@@ -244,43 +244,43 @@ return false;
 
 			Result hba1c_1=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Glycated Hb-Total (Hplc)").within(Duration.months(-6)).last());
+				new LogicCriteria("Glycated Hb-Total (Hplc)").within(Duration.years(-1)).last());
 			resultLookup.put("hba1c_1",hba1c_1);
 			Result hba1c_2=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb A1C Bld Qn HPLC").within(Duration.months(-6)).last());
+				new LogicCriteria("Hgb A1C Bld Qn HPLC").within(Duration.years(-1)).last());
 			resultLookup.put("hba1c_2",hba1c_2);
 			Result hba1c_3=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Glycated Hgb %").within(Duration.months(-6)).last());
+				new LogicCriteria("Glycated Hgb %").within(Duration.years(-1)).last());
 			resultLookup.put("hba1c_3",hba1c_3);
 			Result hba1c_4=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Glycos Hgb A-1%").within(Duration.months(-6)).last());
+				new LogicCriteria("Glycos Hgb A-1%").within(Duration.years(-1)).last());
 			resultLookup.put("hba1c_4",hba1c_4);
 			Result hba1c_5=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb A1C Bld Qn (Meth)").within(Duration.months(-6)).last());
+				new LogicCriteria("Hgb A1C Bld Qn (Meth)").within(Duration.years(-1)).last());
 			resultLookup.put("hba1c_5",hba1c_5);
 			Result hba1c_6=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb A1c Bld Qn (POC)").within(Duration.months(-6)).last());
+				new LogicCriteria("Hgb A1c Bld Qn (POC)").within(Duration.years(-1)).last());
 			resultLookup.put("hba1c_6",hba1c_6);
 			Result hba1c_7=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb A1c Bld Qn IA").within(Duration.months(-6)).last());
+				new LogicCriteria("Hgb A1c Bld Qn IA").within(Duration.years(-1)).last());
 			resultLookup.put("hba1c_7",hba1c_7);
 			Result hba1c_8=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb Glycosylated (VA)").within(Duration.months(-6)).last());
+				new LogicCriteria("Hgb Glycosylated (VA)").within(Duration.years(-1)).last());
 			resultLookup.put("hba1c_8",hba1c_8);
 			Result hba1c_9=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("HgbA1C % Ser EIA").within(Duration.months(-6)).last());
+				new LogicCriteria("HgbA1C % Ser EIA").within(Duration.years(-1)).last());
 			resultLookup.put("hba1c_9",hba1c_9);
 			Result hba1c_10=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hosp Procedures").within(Duration.months(-6)));
+				new LogicCriteria("Hosp Procedures").within(Duration.years(-1)));
 			resultLookup.put("hba1c_10",hba1c_10);}
 
 			if(evaluate_logic(parameters)){

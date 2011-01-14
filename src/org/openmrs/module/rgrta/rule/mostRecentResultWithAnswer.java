@@ -89,8 +89,9 @@ public class mostRecentResultWithAnswer implements Rule
 			}
 		}
 		if(finalResult == null){
-			finalResult = Result.emptyResult();
-		}
+			//finalResult = Result.emptyResult();
+			finalResult = new Result();
+		} 
 		return finalResult;
 	}
 	

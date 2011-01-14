@@ -12,9 +12,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Encounter;
 import org.openmrs.Form;
+import org.openmrs.Location;
+import org.openmrs.LocationTag;
 import org.openmrs.Patient;
 import org.openmrs.api.EncounterService;
 import org.openmrs.api.FormService;
+import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.logic.LogicService;
@@ -83,8 +86,21 @@ public class ProduceFormInstance implements ProcessStateAction
 		if(formName == null){
 			formName = currState.getFormName();
 		}
+		
+		//form attributes for default locations
+		LocationService locationService = Context.getLocationService();
+		Location defaultlocation = locationService.getLocation("Default Location");
+		LocationTag defaultLocationTag = locationService.getLocationTagByName("Default Location Tag");
+		Integer defaultLocationId = null;
+		Integer defaultLocationTagId = null;
+		if (defaultlocation != null){
+			defaultLocationId = defaultlocation.getLocationId();
+		}
+		if (defaultLocationTag != null){
+			defaultLocationTagId = defaultLocationTag.getLocationTagId();
+		}
 		LocationTagAttributeValue locTagAttrValue = 
-			chirdlUtilService.getLocationTagAttributeValue(locationTagId, formName, locationId);
+			chirdlUtilService.getLocationTagAttributeValue(defaultLocationTagId, formName, defaultLocationId);
 		
 		Integer formId = null;
 		
@@ -140,7 +156,7 @@ public class ProduceFormInstance implements ProcessStateAction
 		
 		// write the form
 		FormInstance formInstance = atdService.addFormInstance(formId,
-				locationId);
+				defaultLocationId);
 		
 		if(parameters == null){
 			parameters = new HashMap<String,Object>();
@@ -148,16 +164,17 @@ public class ProduceFormInstance implements ProcessStateAction
 		parameters.put("formInstance", formInstance);
 		parameters.put("formId", formId);
 		patientState.setFormInstance(formInstance);
+		patientState.setFormId(formId);
 		atdService.updatePatientState(patientState);
 		Integer formInstanceId = formInstance.getFormInstanceId();
 		String mergeDirectory = IOUtil
 				.formatDirectoryName(org.openmrs.module.atd.util.Util
 						.getFormAttributeValue(formId, "pendingMergeDirectory",
-								locationTagId, locationId));
+								defaultLocationTagId, defaultLocationId));
 
 		String mergeFilename = mergeDirectory + formInstance.toString() + ".xml";
 		int maxDssElements = org.openmrs.module.rgrta.util.Util
-				.getMaxDssElements(formId, locationTagId, locationId);
+				.getMaxDssElements(formId, defaultLocationTagId, defaultLocationId);
 		
 		try {
 			FileOutputStream output = new FileOutputStream(mergeFilename);
@@ -182,7 +199,7 @@ public class ProduceFormInstance implements ProcessStateAction
 				locationTagId, locationId);
 		startTime = System.currentTimeMillis();
 		// update statistics
-		List<Statistics> statistics = rgrtaService.getStatByFormInstance(
+		/*List<Statistics> statistics = rgrtaService.getStatByFormInstance(
 				formInstanceId, formName, locationId);
 
 		for (Statistics currStat : statistics)
@@ -194,7 +211,7 @@ public class ProduceFormInstance implements ProcessStateAction
 		//if this is a PWS, clear the medication list query results
 		if(form.getName().equals("PWS")){
 			MedicationListLookup.removeMedicationList(patientId);
-		}
+		}*/
 	}
 
 	public void changeState(PatientState patientState,

@@ -163,18 +163,12 @@ public class RgrtaServiceImpl implements RgrtaService
 			String medRecNumberTag = org.openmrs.module.atd.util.Util
 					.getFormAttributeValue(formId, "medRecNumberTag",locationTagId,locationId);
 
-			String medRecNumberTag2 = org.openmrs.module.atd.util.Util
-					.getFormAttributeValue(formId, "medRecNumberTag2",locationTagId,locationId);
-			
 			//MRN
 			if (medRecNumberTag!=null&&fieldMap.get(medRecNumberTag) != null)
 			{
 				xmlMedRecNumber = fieldMap.get(medRecNumberTag).getValue();
 			}
 			
-			if (medRecNumberTag2 != null &&fieldMap.get(medRecNumberTag2)!=null ){
-				xmlMedRecNumber2 = fieldMap.get(medRecNumberTag2).getValue();
-			}
 			
 			//Compare form MRNs to patient medical record number
 			if (!Util.extractIntFromString(patientMedRecNumber).equalsIgnoreCase(
@@ -204,31 +198,14 @@ public class RgrtaServiceImpl implements RgrtaService
 				atdService.saveError(warning);
 				
 				
-			}else{
-			
-				//Check for conflicting front and back MRN bar codes.
-				if (!Util.extractIntFromString(xmlMedRecNumber).equalsIgnoreCase(
-						Util.extractIntFromString(xmlMedRecNumber2)))
-				{
-					ATDError atdError = new ATDError("Warning", "MRN Validity", "Patient MRN matches " 
-							+ " MRN bar code on front of form, but the front and back of the form do not match."
-							+ " Possible scan error. "
-							, "\r\n Form instance id: "  + formInstanceId + " \r\n MRN bar code front: " + xmlMedRecNumber + "\r\n MRN bar code back: "
-							+ xmlMedRecNumber2, new Date(), sessionId);
-					atdService.saveError(atdError);
-				}
 			}
 
 			startTime = System.currentTimeMillis();
 			// make sure storeObs gets loaded before running consume
 			// rules
 			dssService.loadRule("CREATE_JIT",false);
-			dssService.loadRule("RgrtaAgeRule",false);
 			dssService.loadRule("storeObs",false);
-			dssService.loadRule("DDST", false);
-			dssService.loadRule("LookupBPcentile", false);
 			dssService.loadRule("ScoreJit", false);
-			dssService.loadRule("CheckIncompleteScoringJit", false);
 
 			startTime = System.currentTimeMillis();
 			//only consume the question fields for one side of the PSF
@@ -664,14 +641,8 @@ public class RgrtaServiceImpl implements RgrtaService
 		startTime = System.currentTimeMillis();
 		try {
 	        dssService.loadRule("CREATE_JIT",false);
-	        dssService.loadRule("RgrtaAgeRule",false);
 	        dssService.loadRule("storeObs",false);
-	        dssService.loadRule("DDST", false);
-	        dssService.loadRule("LookupBPcentile", false);
-			dssService.loadRule("ScoreJit", false);
-			dssService.loadRule("CheckIncompleteScoringJit", false);
-
-
+	        dssService.loadRule("ScoreJit", false);
         }
         catch (Exception e) {
 	        log.error("load rule failed", e);
