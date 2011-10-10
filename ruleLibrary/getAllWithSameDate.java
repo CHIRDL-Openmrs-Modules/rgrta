@@ -106,9 +106,9 @@ public class getAllWithSameDate implements Rule
 	
 		
 		if(sameDateResults.isEmpty()){
-		return Result.emptyResult();
+		return new Result();
 		}
-		return new Result(sameDateResults);
+		return sameDateResults;
 	}
 }
 	

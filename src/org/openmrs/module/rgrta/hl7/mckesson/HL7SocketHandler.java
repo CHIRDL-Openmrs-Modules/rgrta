@@ -68,7 +68,7 @@ public class HL7SocketHandler extends
 	 * ca.uhn.hl7v2.model.Message)
 	 */
 	@Override
-	public synchronized Message processMessage(Message message,
+	public  Message processMessage(Message message,
 			HashMap<String,Object> parameters) throws ApplicationException {
 		AdministrationService adminService = Context.getAdministrationService();
 		String incomingMessageString = null;
@@ -290,27 +290,7 @@ public class HL7SocketHandler extends
 			}
 		}
 		
-		
-		
-		//Use default so that we don't store location
-		/*Location location = locationService
-					.getLocation("Default Location");
-
-		if (location == null)
-		{
-			location = new Location();
-			location.setName("Default Location");
-			
-			LocationTag locTag = locationService.getLocationTagByName("Default Location Tag");
-			location.addTag(locTag);
-			locationService.saveLocation(location);
-			
-			logger.warn("Location '" + locationString
-					+ "' does not exist in the Location table."
-					+ "a new location was created for '"
-					+ locationString + "'");
-		}*/
-
+	
 		RgrtaEncounter.setLocation(location);
 		RgrtaEncounter.setInsuranceSmsCode(null);
 

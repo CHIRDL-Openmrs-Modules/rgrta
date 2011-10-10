@@ -61,8 +61,11 @@ public class LoadHL7ExportQueue implements ProcessStateAction
 		
 		//Integer formId = (Integer) parameters.get("formId");
 		FormInstance formInstance = (FormInstance) parameters.get("formInstance");
-		Integer formId = formInstance.getFormId();
-		String formIdString = String.valueOf(formId);
+		PatientState patientStateWithForm = atdService.getPrevPatientStateByAction(patientState.getSessionId(), patientState.getPatientStateId(), "PRODUCE FORM INSTANCE");
+
+		if (formInstance == null){
+			formInstance = patientStateWithForm.getFormInstance();
+		}
 		State currState = patientState.getState();
 		Integer sessionId = patientState.getSessionId();
 		Session session = atdService.getSession(sessionId);
@@ -78,7 +81,7 @@ public class LoadHL7ExportQueue implements ProcessStateAction
 			export.setStatus(1);
 			RgrtaHL7ExportMap exportMap = new RgrtaHL7ExportMap();
 			RgrtaHL7Export insertedExport = RgrtaService.insertEncounterToHL7ExportQueue(export);
-			exportMap.setValue(formIdString);
+			exportMap.setValue(formInstance.toString());
 			exportMap.setHl7ExportQueueId(insertedExport.getQueueId());
 			exportMap.setDateInserted(new Date());
 			exportMap.setVoided(false);

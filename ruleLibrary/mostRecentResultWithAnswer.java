@@ -60,8 +60,7 @@ public class mostRecentResultWithAnswer implements Rule
 	public Result eval(LogicContext context, Patient patient,
 			Map<String, Object> parameters) throws LogicException
 	{
-	    System.out.println("parameters: "+parameters);
-    	String answer = (String) parameters.get("param1");
+	    String answer = (String) parameters.get("param1");
     	Result results = Result.emptyResult();
     	Result finalResult = null;
     	int i = 2;

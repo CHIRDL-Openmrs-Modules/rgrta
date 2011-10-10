@@ -7,12 +7,8 @@ import java.util.Iterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.api.context.Context;
-import org.openmrs.logic.LogicService;
 import org.openmrs.module.atd.TeleformFileMonitor;
 import org.openmrs.module.atd.TeleformFileState;
-import org.openmrs.module.atd.datasource.TeleformExportXMLDatasource;
-import org.openmrs.module.rgrta.MedicationListLookup;
-import org.openmrs.module.rgrta.datasource.LogicRgrtaObsDAO;
 import org.openmrs.module.rgrta.datasource.ObsRgrtaDatasource;
 import org.openmrs.module.sockethl7listener.ProcessedMessagesManager;
 import org.springframework.aop.AfterReturningAdvice;
@@ -40,13 +36,6 @@ public class TriggerPatientAfterAdvice implements AfterReturningAdvice
 					org.openmrs.Encounter encounter = (org.openmrs.Encounter) args[0];
 					Thread thread = new Thread(new CheckinPatient(encounter));
 					ThreadManager.startThread(thread);
-					/*try {
-	                    MedicationListLookup.queryMedicationList(encounter, false);
-                    }
-                    catch (Exception e) {
-	                    log.error("medication list lookup failed",e);
-                    }
-                    */
 					ProcessedMessagesManager.encountersProcessed();
 				}
 			} catch (Exception e)
@@ -102,9 +91,8 @@ public class TriggerPatientAfterAdvice implements AfterReturningAdvice
 		
 	      
         if(method.getName().equals("cleanCache")) {
-            log.info("clear regenObs and medicationList cache");
+            log.info("clear regenObs  cache");
             ((ObsRgrtaDatasource) Context.getLogicService().getLogicDataSource("RMRS")).clearRegenObs();
-            MedicationListLookup.clearMedicationLists();
         }
 	}
 

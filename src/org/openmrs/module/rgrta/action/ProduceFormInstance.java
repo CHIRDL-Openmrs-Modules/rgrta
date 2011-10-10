@@ -10,12 +10,10 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openmrs.Encounter;
 import org.openmrs.Form;
 import org.openmrs.Location;
 import org.openmrs.LocationTag;
 import org.openmrs.Patient;
-import org.openmrs.api.EncounterService;
 import org.openmrs.api.FormService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
@@ -28,16 +26,14 @@ import org.openmrs.module.atd.hibernateBeans.PatientState;
 import org.openmrs.module.atd.hibernateBeans.Session;
 import org.openmrs.module.atd.hibernateBeans.State;
 import org.openmrs.module.atd.hibernateBeans.StateAction;
+import org.openmrs.module.atd.hibernateBeans.Statistics;
 import org.openmrs.module.atd.service.ATDService;
-import org.openmrs.module.rgrta.RgrtaStateActionHandler;
-import org.openmrs.module.rgrta.MedicationListLookup;
-import org.openmrs.module.rgrta.datasource.ObsRgrtaDatasource;
 import org.openmrs.module.chirdlutil.hibernateBeans.LocationTagAttributeValue;
 import org.openmrs.module.chirdlutil.service.ChirdlUtilService;
-import org.openmrs.module.rgrta.hibernateBeans.Statistics;
-import org.openmrs.module.rgrta.service.RgrtaService;
 import org.openmrs.module.chirdlutil.util.IOUtil;
-import org.openmrs.module.rgccd.Medication;
+import org.openmrs.module.rgrta.RgrtaStateActionHandler;
+import org.openmrs.module.rgrta.datasource.ObsRgrtaDatasource;
+import org.openmrs.module.rgrta.service.RgrtaService;
 
 /**
  * @author tmdugan
@@ -70,8 +66,7 @@ public class ProduceFormInstance implements ProcessStateAction
 		
 		RgrtaService rgrtaService = Context
 				.getService(RgrtaService.class);
-		ATDService atdService = Context
-				.getService(ATDService.class);
+		ATDService atdService = Context.getService(ATDService.class);
 		ChirdlUtilService chirdlUtilService = Context.getService(ChirdlUtilService.class);
 
 		State currState = patientState.getState();
@@ -85,6 +80,13 @@ public class ProduceFormInstance implements ProcessStateAction
 		}
 		if(formName == null){
 			formName = currState.getFormName();
+			String formInstanceString =  (String) parameters.get("formInstance");
+			
+			if (formInstanceString != null){
+				FormService formService = Context.getFormService();
+				Form form = formService.getForm(formInstanceString);
+				formName = form.getName();
+			}
 		}
 		
 		//form attributes for default locations
@@ -112,6 +114,9 @@ public class ProduceFormInstance implements ProcessStateAction
 					formId = Integer.parseInt(value);
 				} catch (Exception e)
 				{
+					log.error("Form id does not contain a parsible integer " +
+							" when searched from the location value attribute. Form id value was " +
+							value);
 				}
 			}
 		}
@@ -130,28 +135,7 @@ public class ProduceFormInstance implements ProcessStateAction
 		FormService formService = Context.getFormService();
 		Form form = formService.getForm(formId);
 		startTime = System.currentTimeMillis();
-		if(form.getName().equals("PWS")){
-			List<Medication> drugs = MedicationListLookup.getMedicationList(patientId);
-			EncounterService encounterService = Context.getService(EncounterService.class);
-			Encounter encounter = encounterService.getEncounter(encounterId);
-			//if there is no drug list, call the ccd service again
-			//to get the drug list
-			if(drugs == null){
-				State queryMedListState = atdService.getStateByName("Query medication list");
-				PatientState state = atdService.addPatientState(patient, queryMedListState, 
-					sessionId, locationTagId,locationId);
-				try {
-	                MedicationListLookup.queryMedicationList(encounter,true);
-                }
-                catch (Exception e) {
-	               
-	                log.error("Medication Query failed", e);
-                }
-				state.setEndTime(new java.util.Date());
-				atdService.updatePatientState(patientState);
-			}
-			System.out.println("Produce: query medication list: "+(System.currentTimeMillis()-startTime));
-		}
+		
 		startTime = System.currentTimeMillis();
 		
 		// write the form
@@ -199,19 +183,16 @@ public class ProduceFormInstance implements ProcessStateAction
 				locationTagId, locationId);
 		startTime = System.currentTimeMillis();
 		// update statistics
-		/*List<Statistics> statistics = rgrtaService.getStatByFormInstance(
-				formInstanceId, formName, locationId);
+		List<Statistics> statistics = atdService.getStatByFormInstance(formInstanceId, formName, locationId);
 
 		for (Statistics currStat : statistics)
 		{
 			currStat.setPrintedTimestamp(patientState.getEndTime());
-			rgrtaService.updateStatistics(currStat);
+			atdService.updateStatistics(currStat);
 		}
 		startTime = System.currentTimeMillis();
-		//if this is a PWS, clear the medication list query results
-		if(form.getName().equals("PWS")){
-			MedicationListLookup.removeMedicationList(patientId);
-		}*/
+		
+		
 	}
 
 	public void changeState(PatientState patientState,

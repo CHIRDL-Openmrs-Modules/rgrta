@@ -220,7 +220,6 @@ return false;
 		String actionStr = "";
 		resultLookup = new HashMap <String, Result>();
 		Boolean ageOK = null;
-		System.out.println("test this");
 
 		try {
 			this.patient=patient;

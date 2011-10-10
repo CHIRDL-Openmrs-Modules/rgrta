@@ -94,18 +94,22 @@ public class HL7EncounterHandler25 extends
 			OBR obr = getOBR(message, 0);
 			timeStamp = null;
 			
-			if (message instanceof ORU_R01) {
-				if (obr != null)
-					timeStamp = msh.getDateTimeOfMessage();
-			} else if ((message instanceof ADT_A01)) {
+			//Look in PV1 date time first, msh second, final current time stamp
+			if (message instanceof ORU_R01 || message instanceof ADT_A01) {
 				if (pv1 != null)
 					timeStamp = pv1.getAdmitDateTime();
+				if (timeStamp == null) timeStamp = pv1.getDischargeDateTime(0);
 			}
 			 if (timeStamp == null || timeStamp.getTime()== null || timeStamp.getTime().getValue() == null){
 				 if (msh != null){
 					 timeStamp = msh.getDateTimeOfMessage();
 			 	}
+			 } else {
+				 logger.error("A valid encounter date time stamp could not be " +
+							"determined from PV1 or MSH segments and for the purpose of rgrta" +
+							"the current date time will be used.");
 			 }
+			
 			
 			if (timeStamp != null && timeStamp.getTime()!= null) { 
 				datetime = TranslateDate(timeStamp);
@@ -116,7 +120,7 @@ public class HL7EncounterHandler25 extends
 			}
 			
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.error("A valid encounter date time stamp could not be determined", e);
 		}
 
 		return datetime;

@@ -186,7 +186,7 @@ public class HL7EncounterHandler23 implements HL7EncounterHandler{
 		} 
 		if (timeStamp != null)
 		{
-			 TSComponentOne dtm = timeStamp.getTimeOfAnEvent();
+			 ST dtm = timeStamp.getTimeOfAnEvent();
 			if (dtm == null || dtm.getValue() == null)
 			{
 				timeStamp = msh.getDateTimeOfMessage();

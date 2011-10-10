@@ -26,9 +26,9 @@ import org.openmrs.module.atd.hibernateBeans.StateAction;
 import org.openmrs.module.atd.service.ATDService;
 import org.openmrs.module.rgrta.RgrtaStateActionHandler;
 import org.openmrs.module.rgrta.hibernateBeans.Encounter;
-import org.openmrs.module.rgrta.hibernateBeans.Statistics;
-import org.openmrs.module.rgrta.service.RgrtaService;
+import org.openmrs.module.atd.hibernateBeans.Statistics;
 import org.openmrs.module.rgrta.service.EncounterService;
+import org.openmrs.module.rgrta.service.RgrtaService;
 
 /**
  * @author tmdugan
@@ -57,45 +57,52 @@ public class Rescan implements ProcessStateAction
 				.getService(ATDService.class);
 		State currState = patientState.getState();
 		Integer sessionId = patientState.getSessionId();
-
-		FormInstance formInstance = (FormInstance) parameters.get("formInstance");
+		FormInstance formInstance = patientState.getFormInstance();
 		
-		patientState.setFormInstance(formInstance);
-		atdService.updatePatientState(patientState);
+		PatientState stateWithFormId = atdService.getPrevPatientStateByAction(sessionId, patientState.getPatientStateId()
+				,"PRODUCE FORM INSTANCE");
 
+				formInstance = patientState.getFormInstance();
+
+				if(formInstance == null&&stateWithFormId != null)
+				{
+					formInstance = stateWithFormId.getFormInstance();
+				}
+				
+				if (formInstance == null){
+					formInstance =  (FormInstance) parameters.get("formInstance");
+				}
+
+		if (formInstance == null){
+			formInstance = (FormInstance) parameters.get("formInstance");
+			if (formInstance != null){
+				patientState.setFormInstance(formInstance);
+				atdService.updatePatientState(patientState);
+			}
+			
+		}
+		
 		Session session = atdService.getSession(sessionId);
 		Integer encounterId = session.getEncounterId();
 		FormService formService = Context.getFormService();
 		Form form = formService.getForm(formInstance.getFormId());
 		String formName = form.getName();
 		List<Statistics> stats = null;
-		if (formName != null && formName.equals("PSF"))
-		{
-			// void non question related obs for PSF
-			stats = RgrtaService.getStatsByEncounterFormNotPrioritized(
-					encounterId, formName);
-			
-			//void BMICentile, HCCentile, HtCentile, WtCentile, and	BP
-			voidObsForConcept("BMICentile",encounterId);
-			voidObsForConcept("HCCentile",encounterId);
-			voidObsForConcept("HtCentile",encounterId);
-			voidObsForConcept("WtCentile",encounterId);
-			voidObsForConcept("BP",encounterId);
-		} else
-		{
-			// void all obs for PWS
-			//stats = RgrtaService.getStatsByEncounterForm(encounterId,
-			//		formName);
-		}
+		
+		stats = RgrtaService.getStatsByEncounterForm(encounterId,
+					formName);
+		
 
 		// void obs from previous scan
 		ObsService obsService = Context.getObsService();
-		/*for (Statistics currStat : stats)
-		{
-			Integer obsId = currStat.getObsvId();
-			Obs obs = obsService.getObs(obsId);
-			obsService.voidObs(obs, "voided due to rescan");
-		}*/
+		if (stats != null) {
+			for (Statistics currStat : stats)
+			{
+				Integer obsId = currStat.getObsvId();
+				Obs obs = obsService.getObs(obsId);
+				obsService.voidObs(obs, "voided due to rescan");
+			}
+		}
 
 		RgrtaStateActionHandler.consume(sessionId, formInstance, patient,
 				 parameters,
@@ -104,7 +111,7 @@ public class Rescan implements ProcessStateAction
 		
 		//start a new session if this was a PSF_RESCAN
 		if (patientState.getState().getName()
-				.equalsIgnoreCase("PSF_rescan"))
+				.equalsIgnoreCase("JIT_rescan"))
 		{
 			Session newSession = atdService.addSession();
 			sessionId = newSession.getSessionId();

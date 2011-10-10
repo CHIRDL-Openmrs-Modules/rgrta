@@ -36,7 +36,7 @@
 	<classpathentry kind="lib" path="/dss/dist"/>
 	<classpathentry kind="lib" path="lib-common/spring-framework/spring-test.jar"/>
 	<classpathentry kind="lib" path="lib-common/spring-framework/spring-webmvc.jar"/>
-	<classpathentry kind="lib" path="dist"/>
+	<classpathentry kind="lib" path="dist" sourcepath="src"/>
 	<classpathentry kind="lib" path="lib-common/jibx/jibx-bind.jar"/>
 	<classpathentry kind="lib" path="lib-common/jibx/jibx-extras.jar"/>
 	<classpathentry kind="lib" path="lib-common/jibx/jibx-run.jar"/>
@@ -138,25 +138,9 @@
 	<classpathentry kind="lib" path="lib-common/axis2/XmlSchema-1.4.3.jar"/>
 	<classpathentry kind="lib" path="lib-common/axis2/XmlSchema-LICENSE.txt"/>
 	<classpathentry kind="lib" path="lib-common/dss-2.27.12.jar" sourcepath="/dss/src"/>
-	<classpathentry kind="lib" path="lib-common/rgccd-1.0.2.jar"/>
-	<classpathentry kind="lib" path="lib-common/chirdlutil-1.0.14.jar" sourcepath="/chirdlutil/src"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-base-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-examples-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v21-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v22-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v23-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v231-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v24-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v25-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/sockethl7listener-1.3.23.jar" sourcepath="/sockethl7listener/src"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-base-1.0.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-sourcegen-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v21-1.0.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v22-1.0.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v23-1.0.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v231-1.0.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v24-1.0.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v25-1.0.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib-common/atd-1.60.jar" sourcepath="/atd/src"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-0.5.jar" sourcepath="/HAPI/src/uhn/hl7v2/model/v25"/>
+	<classpathentry kind="lib" path="lib-common/chirdlutil-1.0.18.jar" sourcepath="/chirdlutil/src"/>
+	<classpathentry kind="lib" path="lib-common/atd-1.61.21.jar" sourcepath="/atd/src"/>
+	<classpathentry kind="lib" path="lib-common/sockethl7listener-1.3.26.jar" sourcepath="/sockethl7listener/src"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

@@ -42,12 +42,5 @@
 <value name="UNITS" field="units" usage="optional" />
 </mapping>
 
-  <mapping class="org.openmrs.module.rgrta.xmlBeans.UnfilteredMedications" name="unfilteredMedications">
-    <collection item-type="org.openmrs.module.rgrta.xmlBeans.Medication" get-method="getUnfilteredMedications" set-method="setUnfilteredMedications" create-type="java.util.ArrayList"/>
-  </mapping>
-  <mapping class="org.openmrs.module.rgrta.xmlBeans.Medication" name="medication">
-    <value style="attribute" name="name" get-method="getName" set-method="setName"/>
-    <value style="attribute" name="system" get-method="getSystem" set-method="setSystem"/>
-  </mapping>
 
 </binding>

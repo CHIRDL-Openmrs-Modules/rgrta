@@ -5,7 +5,18 @@
   
 <beans>
 	
-	
+	<bean id="rgrtaUrlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="mappings">
+            <props>
+  				<prop key="/module/@MODULE_ID@/weeklyReports.form">weeklyReports</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="weeklyReports" class="@MODULE_PACKAGE@.web.WeeklyReportsController">
+		<property name="commandName"><value>weeklyReportsObject</value></property>
+		<property name="formView"><value>/module/@MODULE_ID@/weeklyReports</value></property>
+		<property name="successView"><value>weeklyReports.form</value></property>
+	</bean>
 	<bean parent="serviceContext">
 		<property name="moduleService">
 			<list>

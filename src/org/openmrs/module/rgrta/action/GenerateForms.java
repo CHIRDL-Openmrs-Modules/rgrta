@@ -3,10 +3,7 @@
  */
 package org.openmrs.module.rgrta.action;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,16 +26,14 @@ import org.openmrs.module.atd.hibernateBeans.Session;
 import org.openmrs.module.atd.hibernateBeans.State;
 import org.openmrs.module.atd.hibernateBeans.StateAction;
 import org.openmrs.module.atd.service.ATDService;
-import org.openmrs.module.rgrta.RgrtaStateActionHandler;
-import org.openmrs.module.rgrta.datasource.ObsRgrtaDatasource;
 import org.openmrs.module.chirdlutil.hibernateBeans.LocationTagAttributeValue;
 import org.openmrs.module.chirdlutil.service.ChirdlUtilService;
-import org.openmrs.module.rgrta.hibernateBeans.Statistics;
-import org.openmrs.module.rgrta.service.RgrtaService;
-import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.chirdlutil.util.Util;
 import org.openmrs.module.dss.hibernateBeans.Rule;
-import org.openmrs.module.rgccd.Medication;
+import org.openmrs.module.rgrta.RgrtaStateActionHandler;
+import org.openmrs.module.rgrta.datasource.ObsRgrtaDatasource;
+import org.openmrs.module.rgrta.service.RgrtaService;
+
 
 /**
  * @author tmdugan
@@ -89,6 +84,7 @@ public class GenerateForms implements ProcessStateAction
 		if(formName == null){
 			formName = currState.getFormName();
 		}
+		
 		LocationTagAttributeValue locTagAttrValue = 
 			chirdlUtilService.getLocationTagAttributeValue(locationTagId, formName, locationId);
 		
@@ -102,6 +98,7 @@ public class GenerateForms implements ProcessStateAction
 					formId = Integer.parseInt(value);
 				} catch (Exception e)
 				{
+					log.error("form id is not an integer " + value );
 				}
 			}
 		}

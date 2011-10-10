@@ -28,6 +28,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.logic.LogicService;
 import org.openmrs.logic.result.EmptyResult;
 import org.openmrs.logic.result.Result;
+import org.openmrs.module.atd.BaseStateActionHandler;
 import org.openmrs.module.atd.StateActionHandler;
 import org.openmrs.module.atd.StateManager;
 import org.openmrs.module.atd.TeleformFileMonitor;
@@ -51,7 +52,7 @@ import org.openmrs.module.rgrta.util.Util;
  * @author tmdugan
  * 
  */
-public class RgrtaStateActionHandler implements StateActionHandler
+public class RgrtaStateActionHandler extends BaseStateActionHandler
 {
 	private static Log log = LogFactory.getLog(RgrtaStateActionHandler.class);
 	private static RgrtaStateActionHandler stateActionHandler = null;
@@ -127,8 +128,8 @@ public class RgrtaStateActionHandler implements StateActionHandler
 		
 		log.info("Today's state initialization is: "+(int)((processedStates/numUnfinishedStates)*100)+"% complete.");
 		}}}
-		Thread thread = new Thread(new InitializeOldStates());
-		ThreadManager.startThread(thread);
+	//	Thread thread = new Thread(new InitializeOldStates());
+		//ThreadManager.startThread(thread);
 	}
 	
 	public static RgrtaStateActionHandler getInstance()
@@ -142,30 +143,8 @@ public class RgrtaStateActionHandler implements StateActionHandler
 	public RgrtaStateActionHandler(){
 		
 	}
-	
-	private ProcessStateAction loadProcessStateAction(StateAction stateAction){
 		
-		ProcessStateAction processStateAction = null;
-		
-		try
-		{
-			String stateActionClass = stateAction.getActionClass();
-			Class classInstatiation = Class.forName(stateActionClass);
-			if(stateActionClass == null)
-			{
-				return null;
-			}
-			//class the initialization method is in
-			processStateAction = (ProcessStateAction) classInstatiation.newInstance();
-		} catch (Exception e)
-		{
-			log.error(e.getMessage());
-			log.error(org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
-		}
-		return processStateAction;
-	}
-	
-	public synchronized void changeState(PatientState patientState,
+	public  void changeState(PatientState patientState,
 			HashMap<String,Object> parameters){
 		StateAction stateAction = patientState.getState().getAction();
 		if (stateAction == null)
@@ -178,28 +157,6 @@ public class RgrtaStateActionHandler implements StateActionHandler
 		if (processStateAction != null)
 		{
 			processStateAction.changeState(patientState, parameters);
-		}	
-	}
-	
-	public synchronized void processAction(StateAction stateAction, Patient patient,
-			PatientState patientState,HashMap<String,Object> parameters)
-	{
-		if (stateAction == null)
-		{
-			return;
-		}
-
-		// lookup the patient again to avoid lazy initialization errors
-		PatientService patientService = Context.getPatientService();
-		Integer patientId = patient.getPatientId();
-		patient = patientService.getPatient(patientId);
-
-		ProcessStateAction processStateAction = loadProcessStateAction(stateAction);
-
-		if (processStateAction != null)
-		{
-			processStateAction.processAction(stateAction, patient,
-					patientState, parameters);
 		}	
 	}
 
@@ -225,6 +182,7 @@ public class RgrtaStateActionHandler implements StateActionHandler
 			startTime = System.currentTimeMillis();
 			RgrtaService.consume(input,patient,encounterId,
 					formInstance,sessionId,fieldsToConsume,locationTagId);
+			
 			startTime = System.currentTimeMillis();
 			input.close();
 		} catch (Exception e)
@@ -235,9 +193,7 @@ public class RgrtaStateActionHandler implements StateActionHandler
 		}
 		
 		// save specific observations
-		//saveObs(encounterId, patient,locationTagId);
-		System.out.println("RgrtaStateActionHandler.consume: time of saveObs: "+
-			(System.currentTimeMillis()-startTime));
+		saveObs(encounterId, patient,locationTagId);
 		startTime = System.currentTimeMillis();
 		// remove the parsed xml from the xml datasource
 		try
@@ -266,160 +222,21 @@ public class RgrtaStateActionHandler implements StateActionHandler
 		}
 	}
 	
-	private static synchronized void saveObs(Integer encounterId,Patient patient,
+	private static  synchronized void saveObs(Integer encounterId,Patient patient,
 			Integer locationTagId){
-		EncounterService encounterService = Context.getService(EncounterService.class);
-		Encounter encounter = (Encounter) encounterService.getEncounter(encounterId);
-		ObsService obsService = Context.getObsService();
-		ATDService atdService = Context.getService(ATDService.class);
-		List<org.openmrs.Encounter> encounters = new ArrayList<org.openmrs.Encounter>();
-		encounters.add(encounter);
-		List<Concept> questions = new ArrayList<Concept>();
-		HashMap<String,Object> parameters = new HashMap<String,Object>();
-		Calculator calculator = new Calculator();
-		parameters.put("encounterId", encounterId);
-		ConceptService conceptService = Context.getConceptService();
-		Concept concept = conceptService.getConcept("BMICentile");
-		questions.add(concept);
-		List<Obs> obs = obsService.getObservations(null, encounters, questions, null, null, null, null,
-				null, null, null, null, false);
+		//In Chica this method was used for height, weight, bmi, etc.  
+		//Not applicable for rta projects
 		
-		if (obs == null || obs.size() == 0)
-		{
-			Result result = atdService.evaluateRule("bmi", patient, parameters,
-					null);
-
-			if (!(result instanceof EmptyResult))
-			{
-				Double percentile = calculator.calculatePercentile(result
-						.toNumber(), patient.getGender(), patient
-						.getBirthdate(), "bmi", null);
-				if (percentile != null)
-				{
-					percentile = org.openmrs.module.chirdlutil.util.Util.round(
-							percentile, 2); // round percentile to two places
-					Util.saveObs(patient, concept, encounterId, percentile
-							.toString(), null,null,locationTagId);
-				}
-			}
-		}
 		
-		questions = new ArrayList<Concept>();
-		concept = conceptService.getConcept("HCCentile");
-		questions.add(concept);
-		obs = obsService.getObservations(null, encounters, questions, null, null, null, null,
-				null, null, null, null, false);
-		
-		if(obs == null || obs.size()==0){
-			parameters.put("concept", "HC");
-			Result result = atdService.evaluateRule("conceptRule", patient, parameters, null);
-			if (!(result instanceof EmptyResult))
-			{
-				Double percentile = calculator.calculatePercentile(result
-						.toNumber(), patient.getGender(), patient
-						.getBirthdate(), "hc", null);
-				if (percentile != null)
-				{
-					percentile = org.openmrs.module.chirdlutil.util.Util.round(
-							percentile, 2); // round percentile to two places
-					Util.saveObs(patient, concept, encounterId, percentile
-							.toString(), null,null,locationTagId);
-				}
-			}
-		}
-		
-		questions = new ArrayList<Concept>();
-		concept = conceptService.getConcept("HtCentile");
-		questions.add(concept);
-		obs = obsService.getObservations(null, encounters, questions, null, null, null, null,
-				null, null, null, null, false);
-		
-		if(obs == null || obs.size()==0){
-			parameters.put("concept", "HEIGHT");
-			Result result = atdService.evaluateRule("conceptRule", patient, parameters, null);
-			if (!(result instanceof EmptyResult))
-			{
-				Double percentile = calculator.calculatePercentile(result
-						.toNumber(), patient.getGender(), patient
-						.getBirthdate(), "length", org.openmrs.module.chirdlutil.util.Util.MEASUREMENT_IN);
-				if (percentile != null)
-				{
-					percentile = org.openmrs.module.chirdlutil.util.Util.round(
-							percentile, 2); // round percentile to two places
-					Util.saveObs(patient, concept, encounterId, percentile
-							.toString() , null,null,locationTagId);
-				}
-			}
-		}
-		
-		questions = new ArrayList<Concept>();
-		concept = conceptService.getConcept("WtCentile");
-		questions.add(concept);
-		obs = obsService.getObservations(null, encounters, questions, null, null, null, null,
-				null, null, null, null, false);
-		
-		if(obs == null || obs.size()==0){
-			parameters.put("concept", "WEIGHT");
-			Result result = atdService.evaluateRule("conceptRule", patient, parameters, null);
-			if (!(result instanceof EmptyResult))
-			{
-				Double percentile = calculator.calculatePercentile(result
-						.toNumber(), patient.getGender(), patient
-						.getBirthdate(), "weight", 
-						org.openmrs.module.chirdlutil.util.Util.MEASUREMENT_LB);
-				if (percentile != null)
-				{
-					percentile = org.openmrs.module.chirdlutil.util.Util.round(
-							percentile, 2); // round percentile to two places
-					Util.saveObs(patient, concept, encounterId, percentile
-							.toString(), null,null,locationTagId);
-				}
-			}
-		}
-		
-		//save BP
-		questions = new ArrayList<Concept>();
-		concept = conceptService.getConcept("BP");
-		questions.add(concept);
-		obs = obsService.getObservations(null, encounters, questions, null, null, null, null,
-				null, null, null, null, false);
-		
-		if(obs == null || obs.size()==0){
-			Result result = atdService.evaluateRule("bp", patient, parameters, null);
-			if (!(result instanceof EmptyResult))
-			{
-				Util.saveObs(patient, concept, encounterId, result
-							.toString(), null,
-							null,locationTagId);
-			}
-		}
-		
-		//save BMI
-		questions = new ArrayList<Concept>();
-		concept = conceptService.getConcept("BMI Rgrta");
-		questions.add(concept);
-		obs = obsService.getObservations(null, encounters, questions, null, null, null, null,
-				null, null, null, null, false);
-		
-		if(obs == null || obs.size()==0){
-			Result result = atdService.evaluateRule("bmi", patient, parameters, null);
-			if (!(result instanceof EmptyResult))
-			{
-				Util.saveObs(patient, concept, encounterId, result
-							.toString(), null,
-							null,locationTagId);
-			}
-		}
 	}
 	
-	public static synchronized void changeState(Patient patient, Integer sessionId,
+	public static void changeState(Patient patient, Integer sessionId,
 			State currState,StateAction action,
 			HashMap<String,Object> parameters,
 			Integer locationTagId,Integer locationId)
 	{
 		ATDService atdService = Context.getService(ATDService.class);
 		LocationService locationService = Context.getLocationService();
-		
 		List<ATDError> errors = null;
 		// change to error state if fatal error exists for session
 		//only look up errors for consume state, for now
@@ -443,7 +260,7 @@ public class RgrtaStateActionHandler implements StateActionHandler
 			} 
 			
 			Program program = atdService.getProgram(locationTagId, defaultLocationId);
-			StateManager.changeState(patient, sessionId, currState,program,
+			PatientState changedState = StateManager.changeState(patient, sessionId, currState,program,
 					parameters,locationTagId,defaultLocationId,RgrtaStateActionHandler.getInstance());
 			}
 

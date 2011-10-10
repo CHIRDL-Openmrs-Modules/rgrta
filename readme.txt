@@ -17,5 +17,16 @@ If a patient has been admitted to a network hospital with a diagnosis of asthma
 or indications of suspected asthma, that patient's PCP will be alerted via 
 Docs4Docs.
 
+HL7:
+
+1. Newborn screen lab - ORU-R01 messages.
+Normally encounter date time is in 
+PID - PID-3 has mrn and an assigning authority number.  That number matches a list 
+provided by Regenstrief.  These are used as the locations for the lab encounter.
+Encounter Date/time are located in OBR-7
+
+2.  
+
+
 
 

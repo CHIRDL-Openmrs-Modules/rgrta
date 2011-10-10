@@ -3,6 +3,13 @@
  */
 package org.openmrs.module.rgrta.hl7.sms;
 
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.openmrs.PatientIdentifier;
+import org.openmrs.PatientIdentifierType;
+import org.openmrs.api.PatientService;
+import org.openmrs.api.context.Context;
 import org.openmrs.module.chirdlutil.util.Util;
 
 import ca.uhn.hl7v2.HL7Exception;
@@ -165,6 +172,83 @@ public class HL7PatientHandler25 extends
 			stIdent = Util.removeLeadingZeros(stIdent);
 		}
 		return stIdent;
+	}
+	
+	@Override
+	public Set<PatientIdentifier> getIdentifiers(Message message)
+	{
+		PID pid = getPID(message);
+		CX[] identList = null;
+		PatientService patientService = Context.getPatientService();
+		Set<PatientIdentifier> identifiers = new TreeSet<org.openmrs.PatientIdentifier>();
+
+		try
+		{
+
+			identList = pid.getPatientIdentifierList();
+		} catch (RuntimeException e2)
+		{
+			// Unable to extract identifier from PID segment
+			logger
+					.error("Error extracting identifier from PID segment (MRN). ");
+			// Still need to continue. Execute find match without the identifer
+		}
+		if (identList == null)
+		{
+			logger.warn(" No patient identifier available for this message.");
+			// Still need to continue. Execute find match without the identifer
+			return identifiers;
+		}
+
+		if (identList.length != 0)
+		{
+			// personAttrList ="mrn:";
+
+			for (CX ident : identList)
+			{
+				// First set up the identifier type; We currently use MRN
+				// Get the id number for the authorizing facility
+
+				PatientIdentifier pi = new PatientIdentifier();
+				String stIdent = getMRN(ident);
+				String assignAuth = "";
+				PatientIdentifierType pit = null;
+
+				if (stIdent != null)
+				{
+					assignAuth = ident.getAssigningAuthority().getNamespaceID()
+							.getValue();
+					
+					if (assignAuth == null || assignAuth.trim().equals("")){
+						assignAuth = "MRN_OTHER";
+					} else {
+					
+						pit = patientService
+						.getPatientIdentifierTypeByName("MRN_" + assignAuth);
+					
+						if (pit == null)
+						{
+							PatientIdentifierType idType = new PatientIdentifierType();
+							idType.setDescription(assignAuth);
+							idType.setName("MRN_" + assignAuth);
+							pit = patientService.savePatientIdentifierType(idType);
+							
+						}
+					}
+					pi.setIdentifierType(pit);
+					pi.setIdentifier(stIdent);
+					pi.setPreferred(true);
+
+					identifiers.add(pi);
+
+				} else
+				{
+					logger.error("No MRN in PID segement. ");
+				}
+
+			}
+		}
+		return identifiers;
 	}
 	
 	

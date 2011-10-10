@@ -1,16 +1,14 @@
 package org.openmrs.module.rgrta.rule;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 
+import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.api.context.Context;
 import org.openmrs.logic.LogicContext;
-import org.openmrs.logic.LogicCriteria;
 import org.openmrs.logic.LogicException;
 import org.openmrs.logic.LogicService;
 import org.openmrs.logic.Rule;
@@ -46,7 +44,6 @@ public class getResultElement implements Rule
 			Object param1Obj = parameters.get("param1");
 			if (param1Obj != null){
 				index = Integer.parseInt((String)param1Obj);
-				System.out.println("the index is " +  index);
 			}
 			
 			results = (List<Result>) parameters.get("param2");
@@ -55,11 +52,27 @@ public class getResultElement implements Rule
 		if (index != null && results != null && index < results.toArray().length)
 		{
 			distinctResult = (Result) results.toArray()[index];
-			System.out.println("The result is" + distinctResult.getResultObject().toString());
-			return distinctResult;
+		
+			
+		}
+		if (distinctResult != null && distinctResult.getResultDate() != null){
+			Obs distinctResultObs = (Obs) distinctResult.getResultObject();
+			String txt = distinctResultObs.getValueText();
+			Double num = distinctResultObs.getValueNumeric();
+			
+			if (num != null && !String.valueOf(num).equalsIgnoreCase("null")){
+				distinctResultObs.setValueText(String.valueOf(distinctResultObs.getValueNumeric()));
+			} else {
+				distinctResultObs.setValueText(txt);
+			}
+			
+			return new Result(distinctResultObs);
 		}
 		
-		return Result.emptyResult();
+		Result result = Result.emptyResult(); 
+		
+		
+		return result;
 	}
 
 	/**

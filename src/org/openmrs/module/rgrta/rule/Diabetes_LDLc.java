@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - Diabetes_LDLc.mlm on Thu Aug 05 11:24:57 EDT 2010
+ Translated from - Diabetes_LDLc.mlm on Tue Sep 27 10:29:43 EDT 2011
 
  Title:  Diabetes_LDLc
  Filename:  Diabetes_LDLc
@@ -149,17 +149,17 @@ public class Diabetes_LDLc implements Rule, DssRule{
 
 	/*** @see org.openmrs.module.dss.DssRule#getData()*/
 	public String getData(){
-		return "read If read read read read read read read read read read read endif";
+		return "read If read read read read read read read read read read read read endif";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getLogic()*/
 	public String getLogic(){
-		return "If call call call call call call call call call call conclude endif";
+		return "If call call call call call call call call call call if || if || call call conclude endif";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getAction()*/
 	public String getAction(){
-		return "write write";
+		return null;
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getAgeMin()*/
@@ -244,52 +244,56 @@ return false;
 
 			Result ldlc_1=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL SerPl Elp unit/vol").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL SerPl Elp unit/vol").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_1",ldlc_1);
 			Result ldlc_2=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL Calc Bld Qn (POC)").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL Calc Bld Qn (POC)").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_2",ldlc_2);
 			Result ldlc_3=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL SerPl Calc Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL SerPl Calc Qn").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_3",ldlc_3);
 			Result ldlc_4=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL SerPl UC Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL SerPl UC Qn").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_4",ldlc_4);
 			Result ldlc_5=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL Direct SerPl Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL Direct SerPl Qn").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_5",ldlc_5);
 			Result ldlc_6=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL Total Direct SerPl Qn UC").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL Total Direct SerPl Qn UC").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_6",ldlc_6);
 			Result ldlc_7=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL Total Sum Direct SerPl Qn UC").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL Total Sum Direct SerPl Qn UC").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_7",ldlc_7);
 			Result ldlc_8=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL SerPl Qn mmol/L").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL SerPl Qn mmol/L").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_8",ldlc_8);
 			Result ldlc_9=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LIPID PROFILE").within(Duration.years(-1)).last());
+				new LogicCriteria("LIPID PROFILE").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_9",ldlc_9);
 			Result ldlc_10=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL SerPl Qn Calc").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL SerPl Qn Calc").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_10",ldlc_10);
 			Result ldlc_11=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("LDL SerPl Qn Elp").within(Duration.years(-1)).last());
+				new LogicCriteria("LDL SerPl Qn Elp").within(Duration.years(-2)).last());
 			resultLookup.put("ldlc_11",ldlc_11);
 			Result ldlc_12=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hosp Procedures").within(Duration.years(-1)));
-			resultLookup.put("ldlc_12",ldlc_12);}
+				new LogicCriteria("LDL Direct Serpl Qn").within(Duration.years(-2)).last());
+			resultLookup.put("ldlc_12",ldlc_12);
+			Result ldlc_13=context.read(
+				patient,context.getLogicDataSource("RMRS"),
+				new LogicCriteria("Hosp Procedures").within(Duration.years(-2)));
+			resultLookup.put("ldlc_13",ldlc_13);}
 
 			if(evaluate_logic(parameters)){
 				Result ruleResult = new Result();
@@ -299,6 +303,7 @@ return false;
 		Result ldlc_11 = (Result) resultLookup.get("ldlc_11");
 		Result ldlc_1 = (Result) resultLookup.get("ldlc_1");
 		Result ldlc_12 = (Result) resultLookup.get("ldlc_12");
+		Result ldlc_13 = (Result) resultLookup.get("ldlc_13");
 		Result ldlc_2 = (Result) resultLookup.get("ldlc_2");
 		Result ldlc_3 = (Result) resultLookup.get("ldlc_3");
 		Result ldlc_4 = (Result) resultLookup.get("ldlc_4");
@@ -329,6 +334,7 @@ return false;
 		Result ldlc_11 = (Result) resultLookup.get("ldlc_11");
 		Result ldlc_1 = (Result) resultLookup.get("ldlc_1");
 		Result ldlc_12 = (Result) resultLookup.get("ldlc_12");
+		Result ldlc_13 = (Result) resultLookup.get("ldlc_13");
 		Result ldlc_2 = (Result) resultLookup.get("ldlc_2");
 		Result ldlc_3 = (Result) resultLookup.get("ldlc_3");
 		Result ldlc_4 = (Result) resultLookup.get("ldlc_4");
@@ -380,37 +386,37 @@ return false;
 				{
 					parameters.put("param1","LDL-C <100 MG/DL");
 				}
-				varLen = "ldlc_12_object".length();
-				value=userVarMap.get("ldlc_12_object");
+				varLen = "ldlc_13_object".length();
+				value=userVarMap.get("ldlc_13_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("ldlc_12_object".endsWith("_value"))
+				else if("ldlc_13_object".endsWith("_value"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					variable = "ldlc_13_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_date"))
+				else if("ldlc_13_object".endsWith("_date"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					variable = "ldlc_13_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_object"))
+				else if("ldlc_13_object".endsWith("_object"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					variable = "ldlc_13_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("ldlc_12_object") != null){
-						value = resultLookup.get("ldlc_12_object").toString();
+					if (resultLookup.get("ldlc_13_object") != null){
+						value = resultLookup.get("ldlc_13_object").toString();
 					}
 				}
 				if(value != null){
@@ -418,7 +424,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","ldlc_12_object");
+					parameters.put("param2","ldlc_13_object");
 				}
 				Result result1 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result1",result1);
@@ -462,37 +468,37 @@ return false;
 				{
 					parameters.put("param1","LDL-C 100-129 MG/DL");
 				}
-				varLen = "ldlc_12_object".length();
-				value=userVarMap.get("ldlc_12_object");
+				varLen = "ldlc_13_object".length();
+				value=userVarMap.get("ldlc_13_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("ldlc_12_object".endsWith("_value"))
+				else if("ldlc_13_object".endsWith("_value"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					variable = "ldlc_13_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_date"))
+				else if("ldlc_13_object".endsWith("_date"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					variable = "ldlc_13_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_object"))
+				else if("ldlc_13_object".endsWith("_object"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					variable = "ldlc_13_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("ldlc_12_object") != null){
-						value = resultLookup.get("ldlc_12_object").toString();
+					if (resultLookup.get("ldlc_13_object") != null){
+						value = resultLookup.get("ldlc_13_object").toString();
 					}
 				}
 				if(value != null){
@@ -500,7 +506,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","ldlc_12_object");
+					parameters.put("param2","ldlc_13_object");
 				}
 				Result result2 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result2",result2);
@@ -544,37 +550,37 @@ return false;
 				{
 					parameters.put("param1","LDL-C>= 130 MG/DL");
 				}
-				varLen = "ldlc_12_object".length();
-				value=userVarMap.get("ldlc_12_object");
+				varLen = "ldlc_13_object".length();
+				value=userVarMap.get("ldlc_13_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("ldlc_12_object".endsWith("_value"))
+				else if("ldlc_13_object".endsWith("_value"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					variable = "ldlc_13_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_date"))
+				else if("ldlc_13_object".endsWith("_date"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					variable = "ldlc_13_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_object"))
+				else if("ldlc_13_object".endsWith("_object"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					variable = "ldlc_13_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("ldlc_12_object") != null){
-						value = resultLookup.get("ldlc_12_object").toString();
+					if (resultLookup.get("ldlc_13_object") != null){
+						value = resultLookup.get("ldlc_13_object").toString();
 					}
 				}
 				if(value != null){
@@ -582,7 +588,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","ldlc_12_object");
+					parameters.put("param2","ldlc_13_object");
 				}
 				Result result3 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result3",result3);
@@ -626,37 +632,37 @@ return false;
 				{
 					parameters.put("param1","LIPID PANEL");
 				}
-				varLen = "ldlc_12_object".length();
-				value=userVarMap.get("ldlc_12_object");
+				varLen = "ldlc_13_object".length();
+				value=userVarMap.get("ldlc_13_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("ldlc_12_object".endsWith("_value"))
+				else if("ldlc_13_object".endsWith("_value"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					variable = "ldlc_13_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_date"))
+				else if("ldlc_13_object".endsWith("_date"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					variable = "ldlc_13_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_object"))
+				else if("ldlc_13_object".endsWith("_object"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					variable = "ldlc_13_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("ldlc_12_object") != null){
-						value = resultLookup.get("ldlc_12_object").toString();
+					if (resultLookup.get("ldlc_13_object") != null){
+						value = resultLookup.get("ldlc_13_object").toString();
 					}
 				}
 				if(value != null){
@@ -664,7 +670,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","ldlc_12_object");
+					parameters.put("param2","ldlc_13_object");
 				}
 				Result result4 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result4",result4);
@@ -708,37 +714,37 @@ return false;
 				{
 					parameters.put("param1","LIPIDS, BLOOD; TOTAL");
 				}
-				varLen = "ldlc_12_object".length();
-				value=userVarMap.get("ldlc_12_object");
+				varLen = "ldlc_13_object".length();
+				value=userVarMap.get("ldlc_13_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("ldlc_12_object".endsWith("_value"))
+				else if("ldlc_13_object".endsWith("_value"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					variable = "ldlc_13_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_date"))
+				else if("ldlc_13_object".endsWith("_date"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					variable = "ldlc_13_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_object"))
+				else if("ldlc_13_object".endsWith("_object"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					variable = "ldlc_13_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("ldlc_12_object") != null){
-						value = resultLookup.get("ldlc_12_object").toString();
+					if (resultLookup.get("ldlc_13_object") != null){
+						value = resultLookup.get("ldlc_13_object").toString();
 					}
 				}
 				if(value != null){
@@ -746,7 +752,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","ldlc_12_object");
+					parameters.put("param2","ldlc_13_object");
 				}
 				Result result5 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result5",result5);
@@ -790,37 +796,37 @@ return false;
 				{
 					parameters.put("param1","LIPOPROTEIN BLD, HR FRACT");
 				}
-				varLen = "ldlc_12_object".length();
-				value=userVarMap.get("ldlc_12_object");
+				varLen = "ldlc_13_object".length();
+				value=userVarMap.get("ldlc_13_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("ldlc_12_object".endsWith("_value"))
+				else if("ldlc_13_object".endsWith("_value"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					variable = "ldlc_13_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_date"))
+				else if("ldlc_13_object".endsWith("_date"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					variable = "ldlc_13_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_object"))
+				else if("ldlc_13_object".endsWith("_object"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					variable = "ldlc_13_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("ldlc_12_object") != null){
-						value = resultLookup.get("ldlc_12_object").toString();
+					if (resultLookup.get("ldlc_13_object") != null){
+						value = resultLookup.get("ldlc_13_object").toString();
 					}
 				}
 				if(value != null){
@@ -828,7 +834,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","ldlc_12_object");
+					parameters.put("param2","ldlc_13_object");
 				}
 				Result result6 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result6",result6);
@@ -872,37 +878,37 @@ return false;
 				{
 					parameters.put("param1","LIPOPROTEIN, BLD, BY NMR");
 				}
-				varLen = "ldlc_12_object".length();
-				value=userVarMap.get("ldlc_12_object");
+				varLen = "ldlc_13_object".length();
+				value=userVarMap.get("ldlc_13_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("ldlc_12_object".endsWith("_value"))
+				else if("ldlc_13_object".endsWith("_value"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					variable = "ldlc_13_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_date"))
+				else if("ldlc_13_object".endsWith("_date"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					variable = "ldlc_13_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_object"))
+				else if("ldlc_13_object".endsWith("_object"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					variable = "ldlc_13_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("ldlc_12_object") != null){
-						value = resultLookup.get("ldlc_12_object").toString();
+					if (resultLookup.get("ldlc_13_object") != null){
+						value = resultLookup.get("ldlc_13_object").toString();
 					}
 				}
 				if(value != null){
@@ -910,7 +916,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","ldlc_12_object");
+					parameters.put("param2","ldlc_13_object");
 				}
 				Result result7 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result7",result7);
@@ -954,37 +960,37 @@ return false;
 				{
 					parameters.put("param1","ASSAY OF BLOOD LIPOPROTEIN");
 				}
-				varLen = "ldlc_12_object".length();
-				value=userVarMap.get("ldlc_12_object");
+				varLen = "ldlc_13_object".length();
+				value=userVarMap.get("ldlc_13_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("ldlc_12_object".endsWith("_value"))
+				else if("ldlc_13_object".endsWith("_value"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					variable = "ldlc_13_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_date"))
+				else if("ldlc_13_object".endsWith("_date"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					variable = "ldlc_13_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_object"))
+				else if("ldlc_13_object".endsWith("_object"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					variable = "ldlc_13_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("ldlc_12_object") != null){
-						value = resultLookup.get("ldlc_12_object").toString();
+					if (resultLookup.get("ldlc_13_object") != null){
+						value = resultLookup.get("ldlc_13_object").toString();
 					}
 				}
 				if(value != null){
@@ -992,7 +998,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","ldlc_12_object");
+					parameters.put("param2","ldlc_13_object");
 				}
 				Result result8 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result8",result8);
@@ -1036,37 +1042,37 @@ return false;
 				{
 					parameters.put("param1","ASSAY OF BLOOD LIPOPROTEINS");
 				}
-				varLen = "ldlc_12_object".length();
-				value=userVarMap.get("ldlc_12_object");
+				varLen = "ldlc_13_object".length();
+				value=userVarMap.get("ldlc_13_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("ldlc_12_object".endsWith("_value"))
+				else if("ldlc_13_object".endsWith("_value"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					variable = "ldlc_13_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_date"))
+				else if("ldlc_13_object".endsWith("_date"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					variable = "ldlc_13_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("ldlc_12_object".endsWith("_object"))
+				else if("ldlc_13_object".endsWith("_object"))
 				{
-					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					variable = "ldlc_13_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("ldlc_12_object") != null){
-						value = resultLookup.get("ldlc_12_object").toString();
+					if (resultLookup.get("ldlc_13_object") != null){
+						value = resultLookup.get("ldlc_13_object").toString();
 					}
 				}
 				if(value != null){
@@ -1074,7 +1080,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","ldlc_12_object");
+					parameters.put("param2","ldlc_13_object");
 				}
 				Result result9 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result9",result9);
@@ -1758,10 +1764,50 @@ return false;
 				{
 					parameters.put("param17","ldlc_11_object");
 				}
+				varLen = "ldlc_12_object".length();
+				value=userVarMap.get("ldlc_12_object");
+				if(value != null){
+					parameters.put("param18",value);
+				}
+				// It must be a result value or date
+				else if("ldlc_12_object".endsWith("_value"))
+				{
+					variable = "ldlc_12_object".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("ldlc_12_object".endsWith("_date"))
+				{
+					variable = "ldlc_12_object".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("ldlc_12_object".endsWith("_object"))
+				{
+					variable = "ldlc_12_object".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("ldlc_12_object") != null){
+						value = resultLookup.get("ldlc_12_object").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param18",value);
+				}
+				else
+				{
+					parameters.put("param18","ldlc_12_object");
+				}
 				varLen = "result7_object".length();
 				value=userVarMap.get("result7_object");
 				if(value != null){
-					parameters.put("param18",value);
+					parameters.put("param19",value);
 				}
 				// It must be a result value or date
 				else if("result7_object".endsWith("_value"))
@@ -1792,16 +1838,16 @@ return false;
 					}
 				}
 				if(value != null){
-					parameters.put("param18",value);
+					parameters.put("param19",value);
 				}
 				else
 				{
-					parameters.put("param18","result7_object");
+					parameters.put("param19","result7_object");
 				}
 				varLen = "result8_object".length();
 				value=userVarMap.get("result8_object");
 				if(value != null){
-					parameters.put("param19",value);
+					parameters.put("param20",value);
 				}
 				// It must be a result value or date
 				else if("result8_object".endsWith("_value"))
@@ -1832,16 +1878,16 @@ return false;
 					}
 				}
 				if(value != null){
-					parameters.put("param19",value);
+					parameters.put("param20",value);
 				}
 				else
 				{
-					parameters.put("param19","result8_object");
+					parameters.put("param20","result8_object");
 				}
 				varLen = "result9_object".length();
 				value=userVarMap.get("result9_object");
 				if(value != null){
-					parameters.put("param20",value);
+					parameters.put("param21",value);
 				}
 				// It must be a result value or date
 				else if("result9_object".endsWith("_value"))
@@ -1872,22 +1918,114 @@ return false;
 					}
 				}
 				if(value != null){
-					parameters.put("param20",value);
+					parameters.put("param21",value);
 				}
 				else
 				{
-					parameters.put("param20","result9_object");
+					parameters.put("param21","result9_object");
 				}
 				Result finalResult = logicService.eval(patient, "mostRecentResult",parameters);
 				resultLookup.put("finalResult",finalResult);
+		if((finalResult.isNull())){
+			//preprocess any || operator ;
+			String val = doAction("");
+			userVarMap.put("finalResult_date",  val);
+		}
+		if((finalResult.isNull())){
+			//preprocess any || operator ;
+			String val = doAction("");
+			userVarMap.put("finalResult_value",  val);
+		}
+				varLen = "finalResult_object".length();
+				value=userVarMap.get("finalResult_object");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("finalResult_object".endsWith("_value"))
+				{
+					variable = "finalResult_object".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResult_object".endsWith("_date"))
+				{
+					variable = "finalResult_object".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResult_object".endsWith("_object"))
+				{
+					variable = "finalResult_object".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResult_object") != null){
+						value = resultLookup.get("finalResult_object").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","finalResult_object");
+				}
+				Result finalResultConceptName = logicService.eval(patient, "conceptNameResult",parameters);
+				resultLookup.put("finalResultConceptName",finalResultConceptName);
+				varLen = "finalResultConceptName".length();
+				value=userVarMap.get("finalResultConceptName");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("finalResultConceptName".endsWith("_value"))
+				{
+					variable = "finalResultConceptName".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResultConceptName".endsWith("_date"))
+				{
+					variable = "finalResultConceptName".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResultConceptName".endsWith("_object"))
+				{
+					variable = "finalResultConceptName".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResultConceptName") != null){
+						value = resultLookup.get("finalResultConceptName").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","finalResultConceptName");
+				}
+				Result finalResultUnits = logicService.eval(patient, "getConceptUnits",parameters);
+				resultLookup.put("finalResultUnits",finalResultUnits);
 			return true;
 		}
 	return false;	}
 
 	public void initAction() {
 		this.actions = new ArrayList<String>();
-		actions.add("|| finalResult_date ||@ldlcResultDate");
-		actions.add("|| finalResult_value ||@ldlcResultValue");
 	}
 
 private String substituteString(String variable,String outStr){

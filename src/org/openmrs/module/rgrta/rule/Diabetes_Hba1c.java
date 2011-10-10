@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - Diabetes_Hba1c.mlm on Fri Sep 24 15:26:54 EDT 2010
+ Translated from - Diabetes_Hba1c.mlm on Tue Sep 27 10:44:53 EDT 2011
 
  Title:  Diabetes Hba1c
  Filename:  Diabetes_Hba1c
@@ -149,17 +149,17 @@ public class Diabetes_Hba1c implements Rule, DssRule{
 
 	/*** @see org.openmrs.module.dss.DssRule#getData()*/
 	public String getData(){
-		return "read If read read read read read read read read read endif";
+		return "read If read read read read read read read read read read read read read endif";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getLogic()*/
 	public String getLogic(){
-		return "If call call call call call call call conclude endif";
+		return "If call call call call call call call if || if || call call conclude endif";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getAction()*/
 	public String getAction(){
-		return "write write";
+		return "call call call call write write write write";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getAgeMin()*/
@@ -244,44 +244,60 @@ return false;
 
 			Result hba1c_1=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Glycated Hb-Total (Hplc)").within(Duration.years(-1)).last());
+				new LogicCriteria("Glycated Hb-Total (Hplc)").within(Duration.years(-2)).last());
 			resultLookup.put("hba1c_1",hba1c_1);
 			Result hba1c_2=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb A1C Bld Qn HPLC").within(Duration.years(-1)).last());
+				new LogicCriteria("Hgb A1C Bld Qn HPLC").within(Duration.years(-2)).last());
 			resultLookup.put("hba1c_2",hba1c_2);
 			Result hba1c_3=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Glycated Hgb %").within(Duration.years(-1)).last());
+				new LogicCriteria("Glycated Hgb %").within(Duration.years(-2)).last());
 			resultLookup.put("hba1c_3",hba1c_3);
 			Result hba1c_4=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Glycos Hgb A-1%").within(Duration.years(-1)).last());
+				new LogicCriteria("Glycos Hgb A-1%").within(Duration.years(-2)).last());
 			resultLookup.put("hba1c_4",hba1c_4);
 			Result hba1c_5=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb A1C Bld Qn (Meth)").within(Duration.years(-1)).last());
+				new LogicCriteria("Hgb A1C Bld Qn (Meth)").within(Duration.years(-2)).last());
 			resultLookup.put("hba1c_5",hba1c_5);
 			Result hba1c_6=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb A1c Bld Qn (POC)").within(Duration.years(-1)).last());
+				new LogicCriteria("Hgb A1C Bld Qn (POC)").within(Duration.years(-2)).last());
 			resultLookup.put("hba1c_6",hba1c_6);
 			Result hba1c_7=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb A1c Bld Qn IA").within(Duration.years(-1)).last());
+				new LogicCriteria("Hgb A1C Bld Qn IA").within(Duration.years(-2)).last());
 			resultLookup.put("hba1c_7",hba1c_7);
 			Result hba1c_8=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hgb Glycosylated (VA)").within(Duration.years(-1)).last());
+				new LogicCriteria("Hgb Glycosylated (VA)").within(Duration.years(-2)).last());
 			resultLookup.put("hba1c_8",hba1c_8);
 			Result hba1c_9=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("HgbA1C % Ser EIA").within(Duration.years(-1)).last());
+				new LogicCriteria("HgbA1C % Ser EIA").within(Duration.years(-2)).last());
 			resultLookup.put("hba1c_9",hba1c_9);
 			Result hba1c_10=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hosp Procedures").within(Duration.years(-1)));
-			resultLookup.put("hba1c_10",hba1c_10);}
+				new LogicCriteria("Glycated Hgb").within(Duration.years(-2)).last());
+			resultLookup.put("hba1c_10",hba1c_10);
+			Result hba1c_11=context.read(
+				patient,context.getLogicDataSource("RMRS"),
+				new LogicCriteria("Glycos Hgb A-1").within(Duration.years(-2)).last());
+			resultLookup.put("hba1c_11",hba1c_11);
+			Result hba1c_12=context.read(
+				patient,context.getLogicDataSource("RMRS"),
+				new LogicCriteria("Hgb A1C Bld Qn HPLC").within(Duration.years(-2)).last());
+			resultLookup.put("hba1c_12",hba1c_12);
+			Result hba1c_13=context.read(
+				patient,context.getLogicDataSource("RMRS"),
+				new LogicCriteria("Hgb A1c Bld Qn IA").within(Duration.years(-2)).last());
+			resultLookup.put("hba1c_13",hba1c_13);
+			Result hba1c_14=context.read(
+				patient,context.getLogicDataSource("RMRS"),
+				new LogicCriteria("Hosp Procedures").within(Duration.years(-2)));
+			resultLookup.put("hba1c_14",hba1c_14);}
 
 			if(evaluate_logic(parameters)){
 				Result ruleResult = new Result();
@@ -289,13 +305,508 @@ return false;
 		Result hba1c_8 = (Result) resultLookup.get("hba1c_8");
 		Result hba1c_7 = (Result) resultLookup.get("hba1c_7");
 		Result hba1c_6 = (Result) resultLookup.get("hba1c_6");
+		Result hba1c_14 = (Result) resultLookup.get("hba1c_14");
+		Result hba1c_13 = (Result) resultLookup.get("hba1c_13");
 		Result hba1c_10 = (Result) resultLookup.get("hba1c_10");
 		Result hba1c_1 = (Result) resultLookup.get("hba1c_1");
+		Result hba1c_12 = (Result) resultLookup.get("hba1c_12");
+		Result hba1c_11 = (Result) resultLookup.get("hba1c_11");
 		Result hba1c_4 = (Result) resultLookup.get("hba1c_4");
 		Result hba1c_5 = (Result) resultLookup.get("hba1c_5");
 		Result hba1c_2 = (Result) resultLookup.get("hba1c_2");
 		Result hba1c_3 = (Result) resultLookup.get("hba1c_3");
 
+				Object value = null;
+				String variable = null;
+				int varLen = 0;
+				varLen = "hba1cResultDatePrinted".length();
+				value=userVarMap.get("hba1cResultDatePrinted");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("hba1cResultDatePrinted".endsWith("_value"))
+				{
+					variable = "hba1cResultDatePrinted".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("hba1cResultDatePrinted".endsWith("_date"))
+				{
+					variable = "hba1cResultDatePrinted".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("hba1cResultDatePrinted".endsWith("_object"))
+				{
+					variable = "hba1cResultDatePrinted".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("hba1cResultDatePrinted") != null){
+						value = resultLookup.get("hba1cResultDatePrinted").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","hba1cResultDatePrinted");
+				}
+				varLen = "finalResult_date".length();
+				value=userVarMap.get("finalResult_date");
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				// It must be a result value or date
+				else if("finalResult_date".endsWith("_value"))
+				{
+					variable = "finalResult_date".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResult_date".endsWith("_date"))
+				{
+					variable = "finalResult_date".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResult_date".endsWith("_object"))
+				{
+					variable = "finalResult_date".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResult_date") != null){
+						value = resultLookup.get("finalResult_date").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				else
+				{
+					parameters.put("param2","finalResult_date");
+				}
+				varLen = "Diabetes_Hba1c".length();
+				value=userVarMap.get("Diabetes_Hba1c");
+				if(value != null){
+					parameters.put("param3",value);
+				}
+				// It must be a result value or date
+				else if("Diabetes_Hba1c".endsWith("_value"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("Diabetes_Hba1c".endsWith("_date"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("Diabetes_Hba1c".endsWith("_object"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("Diabetes_Hba1c") != null){
+						value = resultLookup.get("Diabetes_Hba1c").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param3",value);
+				}
+				else
+				{
+					parameters.put("param3","Diabetes_Hba1c");
+				}
+				logicService.eval(patient, "storeObsPrinted",parameters);
+				
+				varLen = "hba1cResultValuePrinted".length();
+				value=userVarMap.get("hba1cResultValuePrinted");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("hba1cResultValuePrinted".endsWith("_value"))
+				{
+					variable = "hba1cResultValuePrinted".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("hba1cResultValuePrinted".endsWith("_date"))
+				{
+					variable = "hba1cResultValuePrinted".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("hba1cResultValuePrinted".endsWith("_object"))
+				{
+					variable = "hba1cResultValuePrinted".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("hba1cResultValuePrinted") != null){
+						value = resultLookup.get("hba1cResultValuePrinted").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","hba1cResultValuePrinted");
+				}
+				varLen = "finalResult_value".length();
+				value=userVarMap.get("finalResult_value");
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				// It must be a result value or date
+				else if("finalResult_value".endsWith("_value"))
+				{
+					variable = "finalResult_value".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResult_value".endsWith("_date"))
+				{
+					variable = "finalResult_value".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResult_value".endsWith("_object"))
+				{
+					variable = "finalResult_value".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResult_value") != null){
+						value = resultLookup.get("finalResult_value").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				else
+				{
+					parameters.put("param2","finalResult_value");
+				}
+				varLen = "Diabetes_Hba1c".length();
+				value=userVarMap.get("Diabetes_Hba1c");
+				if(value != null){
+					parameters.put("param3",value);
+				}
+				// It must be a result value or date
+				else if("Diabetes_Hba1c".endsWith("_value"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("Diabetes_Hba1c".endsWith("_date"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("Diabetes_Hba1c".endsWith("_object"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("Diabetes_Hba1c") != null){
+						value = resultLookup.get("Diabetes_Hba1c").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param3",value);
+				}
+				else
+				{
+					parameters.put("param3","Diabetes_Hba1c");
+				}
+				logicService.eval(patient, "storeObsPrinted",parameters);
+				
+				varLen = "hba1cConceptNamePrinted".length();
+				value=userVarMap.get("hba1cConceptNamePrinted");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("hba1cConceptNamePrinted".endsWith("_value"))
+				{
+					variable = "hba1cConceptNamePrinted".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("hba1cConceptNamePrinted".endsWith("_date"))
+				{
+					variable = "hba1cConceptNamePrinted".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("hba1cConceptNamePrinted".endsWith("_object"))
+				{
+					variable = "hba1cConceptNamePrinted".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("hba1cConceptNamePrinted") != null){
+						value = resultLookup.get("hba1cConceptNamePrinted").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","hba1cConceptNamePrinted");
+				}
+				varLen = "finalResultConceptName_value".length();
+				value=userVarMap.get("finalResultConceptName_value");
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				// It must be a result value or date
+				else if("finalResultConceptName_value".endsWith("_value"))
+				{
+					variable = "finalResultConceptName_value".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResultConceptName_value".endsWith("_date"))
+				{
+					variable = "finalResultConceptName_value".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResultConceptName_value".endsWith("_object"))
+				{
+					variable = "finalResultConceptName_value".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResultConceptName_value") != null){
+						value = resultLookup.get("finalResultConceptName_value").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				else
+				{
+					parameters.put("param2","finalResultConceptName_value");
+				}
+				varLen = "Diabetes_Hba1c".length();
+				value=userVarMap.get("Diabetes_Hba1c");
+				if(value != null){
+					parameters.put("param3",value);
+				}
+				// It must be a result value or date
+				else if("Diabetes_Hba1c".endsWith("_value"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("Diabetes_Hba1c".endsWith("_date"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("Diabetes_Hba1c".endsWith("_object"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("Diabetes_Hba1c") != null){
+						value = resultLookup.get("Diabetes_Hba1c").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param3",value);
+				}
+				else
+				{
+					parameters.put("param3","Diabetes_Hba1c");
+				}
+				logicService.eval(patient, "storeObsPrinted",parameters);
+				
+				varLen = "hba1cResultUnitPrinted".length();
+				value=userVarMap.get("hba1cResultUnitPrinted");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("hba1cResultUnitPrinted".endsWith("_value"))
+				{
+					variable = "hba1cResultUnitPrinted".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("hba1cResultUnitPrinted".endsWith("_date"))
+				{
+					variable = "hba1cResultUnitPrinted".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("hba1cResultUnitPrinted".endsWith("_object"))
+				{
+					variable = "hba1cResultUnitPrinted".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("hba1cResultUnitPrinted") != null){
+						value = resultLookup.get("hba1cResultUnitPrinted").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","hba1cResultUnitPrinted");
+				}
+				varLen = "finalResultUnits_value".length();
+				value=userVarMap.get("finalResultUnits_value");
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				// It must be a result value or date
+				else if("finalResultUnits_value".endsWith("_value"))
+				{
+					variable = "finalResultUnits_value".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResultUnits_value".endsWith("_date"))
+				{
+					variable = "finalResultUnits_value".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResultUnits_value".endsWith("_object"))
+				{
+					variable = "finalResultUnits_value".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResultUnits_value") != null){
+						value = resultLookup.get("finalResultUnits_value").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				else
+				{
+					parameters.put("param2","finalResultUnits_value");
+				}
+				varLen = "Diabetes_Hba1c".length();
+				value=userVarMap.get("Diabetes_Hba1c");
+				if(value != null){
+					parameters.put("param3",value);
+				}
+				// It must be a result value or date
+				else if("Diabetes_Hba1c".endsWith("_value"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("Diabetes_Hba1c".endsWith("_date"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("Diabetes_Hba1c".endsWith("_object"))
+				{
+					variable = "Diabetes_Hba1c".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("Diabetes_Hba1c") != null){
+						value = resultLookup.get("Diabetes_Hba1c").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param3",value);
+				}
+				else
+				{
+					parameters.put("param3","Diabetes_Hba1c");
+				}
+				logicService.eval(patient, "storeObsPrinted",parameters);
+				
 				for(String currAction:actions){
 					currAction = doAction(currAction);
 					ruleResult.add(new Result(currAction));
@@ -316,13 +827,17 @@ return false;
 		Result hba1c_8 = (Result) resultLookup.get("hba1c_8");
 		Result hba1c_7 = (Result) resultLookup.get("hba1c_7");
 		Result hba1c_6 = (Result) resultLookup.get("hba1c_6");
+		Result mode = (Result) resultLookup.get("mode");
+		Result hba1c_14 = (Result) resultLookup.get("hba1c_14");
+		Result hba1c_13 = (Result) resultLookup.get("hba1c_13");
 		Result hba1c_10 = (Result) resultLookup.get("hba1c_10");
 		Result hba1c_1 = (Result) resultLookup.get("hba1c_1");
+		Result hba1c_12 = (Result) resultLookup.get("hba1c_12");
+		Result hba1c_11 = (Result) resultLookup.get("hba1c_11");
 		Result hba1c_4 = (Result) resultLookup.get("hba1c_4");
 		Result hba1c_5 = (Result) resultLookup.get("hba1c_5");
 		Result hba1c_2 = (Result) resultLookup.get("hba1c_2");
 		Result hba1c_3 = (Result) resultLookup.get("hba1c_3");
-		Result mode = (Result) resultLookup.get("mode");
 
 				Object value = null;
 				String variable = null;
@@ -368,37 +883,37 @@ return false;
 				{
 					parameters.put("param1","HG A1C LEVEL < 7.0%");
 				}
-				varLen = "hba1c_10_object".length();
-				value=userVarMap.get("hba1c_10_object");
+				varLen = "hba1c_14_object".length();
+				value=userVarMap.get("hba1c_14_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("hba1c_10_object".endsWith("_value"))
+				else if("hba1c_14_object".endsWith("_value"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-6); // -6 for _value
+					variable = "hba1c_14_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_date"))
+				else if("hba1c_14_object".endsWith("_date"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-5); // -5 for _date
+					variable = "hba1c_14_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_object"))
+				else if("hba1c_14_object".endsWith("_object"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-7); // -5 for _object
+					variable = "hba1c_14_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("hba1c_10_object") != null){
-						value = resultLookup.get("hba1c_10_object").toString();
+					if (resultLookup.get("hba1c_14_object") != null){
+						value = resultLookup.get("hba1c_14_object").toString();
 					}
 				}
 				if(value != null){
@@ -406,7 +921,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","hba1c_10_object");
+					parameters.put("param2","hba1c_14_object");
 				}
 				Result result1 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result1",result1);
@@ -450,37 +965,37 @@ return false;
 				{
 					parameters.put("param1","HG A1C LEVEL 7.0-9.0%");
 				}
-				varLen = "hba1c_10_object".length();
-				value=userVarMap.get("hba1c_10_object");
+				varLen = "hba1c_14_object".length();
+				value=userVarMap.get("hba1c_14_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("hba1c_10_object".endsWith("_value"))
+				else if("hba1c_14_object".endsWith("_value"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-6); // -6 for _value
+					variable = "hba1c_14_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_date"))
+				else if("hba1c_14_object".endsWith("_date"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-5); // -5 for _date
+					variable = "hba1c_14_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_object"))
+				else if("hba1c_14_object".endsWith("_object"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-7); // -5 for _object
+					variable = "hba1c_14_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("hba1c_10_object") != null){
-						value = resultLookup.get("hba1c_10_object").toString();
+					if (resultLookup.get("hba1c_14_object") != null){
+						value = resultLookup.get("hba1c_14_object").toString();
 					}
 				}
 				if(value != null){
@@ -488,7 +1003,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","hba1c_10_object");
+					parameters.put("param2","hba1c_14_object");
 				}
 				Result result2 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result2",result2);
@@ -532,37 +1047,37 @@ return false;
 				{
 					parameters.put("param1","HEMOGLOBIN A1C LEVEL > 9.0%");
 				}
-				varLen = "hba1c_10_object".length();
-				value=userVarMap.get("hba1c_10_object");
+				varLen = "hba1c_14_object".length();
+				value=userVarMap.get("hba1c_14_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("hba1c_10_object".endsWith("_value"))
+				else if("hba1c_14_object".endsWith("_value"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-6); // -6 for _value
+					variable = "hba1c_14_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_date"))
+				else if("hba1c_14_object".endsWith("_date"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-5); // -5 for _date
+					variable = "hba1c_14_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_object"))
+				else if("hba1c_14_object".endsWith("_object"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-7); // -5 for _object
+					variable = "hba1c_14_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("hba1c_10_object") != null){
-						value = resultLookup.get("hba1c_10_object").toString();
+					if (resultLookup.get("hba1c_14_object") != null){
+						value = resultLookup.get("hba1c_14_object").toString();
 					}
 				}
 				if(value != null){
@@ -570,7 +1085,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","hba1c_10_object");
+					parameters.put("param2","hba1c_14_object");
 				}
 				Result result3 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result3",result3);
@@ -614,37 +1129,37 @@ return false;
 				{
 					parameters.put("param1","HEMOGLOBIN A1C LEVEL <= 9.0%");
 				}
-				varLen = "hba1c_10_object".length();
-				value=userVarMap.get("hba1c_10_object");
+				varLen = "hba1c_14_object".length();
+				value=userVarMap.get("hba1c_14_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("hba1c_10_object".endsWith("_value"))
+				else if("hba1c_14_object".endsWith("_value"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-6); // -6 for _value
+					variable = "hba1c_14_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_date"))
+				else if("hba1c_14_object".endsWith("_date"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-5); // -5 for _date
+					variable = "hba1c_14_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_object"))
+				else if("hba1c_14_object".endsWith("_object"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-7); // -5 for _object
+					variable = "hba1c_14_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("hba1c_10_object") != null){
-						value = resultLookup.get("hba1c_10_object").toString();
+					if (resultLookup.get("hba1c_14_object") != null){
+						value = resultLookup.get("hba1c_14_object").toString();
 					}
 				}
 				if(value != null){
@@ -652,7 +1167,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","hba1c_10_object");
+					parameters.put("param2","hba1c_14_object");
 				}
 				Result result4 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result4",result4);
@@ -696,37 +1211,37 @@ return false;
 				{
 					parameters.put("param1","GLYCATED HEMOGLOBIN TEST");
 				}
-				varLen = "hba1c_10_object".length();
-				value=userVarMap.get("hba1c_10_object");
+				varLen = "hba1c_14_object".length();
+				value=userVarMap.get("hba1c_14_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("hba1c_10_object".endsWith("_value"))
+				else if("hba1c_14_object".endsWith("_value"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-6); // -6 for _value
+					variable = "hba1c_14_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_date"))
+				else if("hba1c_14_object".endsWith("_date"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-5); // -5 for _date
+					variable = "hba1c_14_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_object"))
+				else if("hba1c_14_object".endsWith("_object"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-7); // -5 for _object
+					variable = "hba1c_14_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("hba1c_10_object") != null){
-						value = resultLookup.get("hba1c_10_object").toString();
+					if (resultLookup.get("hba1c_14_object") != null){
+						value = resultLookup.get("hba1c_14_object").toString();
 					}
 				}
 				if(value != null){
@@ -734,7 +1249,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","hba1c_10_object");
+					parameters.put("param2","hba1c_14_object");
 				}
 				Result result5 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result5",result5);
@@ -778,37 +1293,37 @@ return false;
 				{
 					parameters.put("param1","GLYCOSYLATED HB, HOME DEV");
 				}
-				varLen = "hba1c_10_object".length();
-				value=userVarMap.get("hba1c_10_object");
+				varLen = "hba1c_14_object".length();
+				value=userVarMap.get("hba1c_14_object");
 				if(value != null){
 					parameters.put("param2",value);
 				}
 				// It must be a result value or date
-				else if("hba1c_10_object".endsWith("_value"))
+				else if("hba1c_14_object".endsWith("_value"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-6); // -6 for _value
+					variable = "hba1c_14_object".substring(0, varLen-6); // -6 for _value
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_date"))
+				else if("hba1c_14_object".endsWith("_date"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-5); // -5 for _date
+					variable = "hba1c_14_object".substring(0, varLen-5); // -5 for _date
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable).getResultDate().toString();
 					}
 				}
-				else if("hba1c_10_object".endsWith("_object"))
+				else if("hba1c_14_object".endsWith("_object"))
 				{
-					variable = "hba1c_10_object".substring(0, varLen-7); // -5 for _object
+					variable = "hba1c_14_object".substring(0, varLen-7); // -5 for _object
 					if (resultLookup.get(variable) != null){
 						value = resultLookup.get(variable);
 					}
 				}
 				else
 				{
-					if (resultLookup.get("hba1c_10_object") != null){
-						value = resultLookup.get("hba1c_10_object").toString();
+					if (resultLookup.get("hba1c_14_object") != null){
+						value = resultLookup.get("hba1c_14_object").toString();
 					}
 				}
 				if(value != null){
@@ -816,7 +1331,7 @@ return false;
 				}
 				else
 				{
-					parameters.put("param2","hba1c_10_object");
+					parameters.put("param2","hba1c_14_object");
 				}
 				Result result6 = logicService.eval(patient, "mostRecentResultWithAnswer",parameters);
 				resultLookup.put("result6",result6);
@@ -1180,10 +1695,170 @@ return false;
 				{
 					parameters.put("param9","hba1c_9_object");
 				}
+				varLen = "hba1c_10_object".length();
+				value=userVarMap.get("hba1c_10_object");
+				if(value != null){
+					parameters.put("param10",value);
+				}
+				// It must be a result value or date
+				else if("hba1c_10_object".endsWith("_value"))
+				{
+					variable = "hba1c_10_object".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("hba1c_10_object".endsWith("_date"))
+				{
+					variable = "hba1c_10_object".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("hba1c_10_object".endsWith("_object"))
+				{
+					variable = "hba1c_10_object".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("hba1c_10_object") != null){
+						value = resultLookup.get("hba1c_10_object").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param10",value);
+				}
+				else
+				{
+					parameters.put("param10","hba1c_10_object");
+				}
+				varLen = "hba1c_11_object".length();
+				value=userVarMap.get("hba1c_11_object");
+				if(value != null){
+					parameters.put("param11",value);
+				}
+				// It must be a result value or date
+				else if("hba1c_11_object".endsWith("_value"))
+				{
+					variable = "hba1c_11_object".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("hba1c_11_object".endsWith("_date"))
+				{
+					variable = "hba1c_11_object".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("hba1c_11_object".endsWith("_object"))
+				{
+					variable = "hba1c_11_object".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("hba1c_11_object") != null){
+						value = resultLookup.get("hba1c_11_object").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param11",value);
+				}
+				else
+				{
+					parameters.put("param11","hba1c_11_object");
+				}
+				varLen = "hba1c_12_object".length();
+				value=userVarMap.get("hba1c_12_object");
+				if(value != null){
+					parameters.put("param12",value);
+				}
+				// It must be a result value or date
+				else if("hba1c_12_object".endsWith("_value"))
+				{
+					variable = "hba1c_12_object".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("hba1c_12_object".endsWith("_date"))
+				{
+					variable = "hba1c_12_object".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("hba1c_12_object".endsWith("_object"))
+				{
+					variable = "hba1c_12_object".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("hba1c_12_object") != null){
+						value = resultLookup.get("hba1c_12_object").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param12",value);
+				}
+				else
+				{
+					parameters.put("param12","hba1c_12_object");
+				}
+				varLen = "hba1c_13_object".length();
+				value=userVarMap.get("hba1c_13_object");
+				if(value != null){
+					parameters.put("param13",value);
+				}
+				// It must be a result value or date
+				else if("hba1c_13_object".endsWith("_value"))
+				{
+					variable = "hba1c_13_object".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("hba1c_13_object".endsWith("_date"))
+				{
+					variable = "hba1c_13_object".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("hba1c_13_object".endsWith("_object"))
+				{
+					variable = "hba1c_13_object".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("hba1c_13_object") != null){
+						value = resultLookup.get("hba1c_13_object").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param13",value);
+				}
+				else
+				{
+					parameters.put("param13","hba1c_13_object");
+				}
 				varLen = "result1_object".length();
 				value=userVarMap.get("result1_object");
 				if(value != null){
-					parameters.put("param10",value);
+					parameters.put("param14",value);
 				}
 				// It must be a result value or date
 				else if("result1_object".endsWith("_value"))
@@ -1214,16 +1889,16 @@ return false;
 					}
 				}
 				if(value != null){
-					parameters.put("param10",value);
+					parameters.put("param14",value);
 				}
 				else
 				{
-					parameters.put("param10","result1_object");
+					parameters.put("param14","result1_object");
 				}
 				varLen = "result2_object".length();
 				value=userVarMap.get("result2_object");
 				if(value != null){
-					parameters.put("param11",value);
+					parameters.put("param15",value);
 				}
 				// It must be a result value or date
 				else if("result2_object".endsWith("_value"))
@@ -1254,16 +1929,16 @@ return false;
 					}
 				}
 				if(value != null){
-					parameters.put("param11",value);
+					parameters.put("param15",value);
 				}
 				else
 				{
-					parameters.put("param11","result2_object");
+					parameters.put("param15","result2_object");
 				}
 				varLen = "result3_object".length();
 				value=userVarMap.get("result3_object");
 				if(value != null){
-					parameters.put("param12",value);
+					parameters.put("param16",value);
 				}
 				// It must be a result value or date
 				else if("result3_object".endsWith("_value"))
@@ -1294,16 +1969,16 @@ return false;
 					}
 				}
 				if(value != null){
-					parameters.put("param12",value);
+					parameters.put("param16",value);
 				}
 				else
 				{
-					parameters.put("param12","result3_object");
+					parameters.put("param16","result3_object");
 				}
 				varLen = "result4_object".length();
 				value=userVarMap.get("result4_object");
 				if(value != null){
-					parameters.put("param13",value);
+					parameters.put("param17",value);
 				}
 				// It must be a result value or date
 				else if("result4_object".endsWith("_value"))
@@ -1334,16 +2009,16 @@ return false;
 					}
 				}
 				if(value != null){
-					parameters.put("param13",value);
+					parameters.put("param17",value);
 				}
 				else
 				{
-					parameters.put("param13","result4_object");
+					parameters.put("param17","result4_object");
 				}
 				varLen = "result5_object".length();
 				value=userVarMap.get("result5_object");
 				if(value != null){
-					parameters.put("param14",value);
+					parameters.put("param18",value);
 				}
 				// It must be a result value or date
 				else if("result5_object".endsWith("_value"))
@@ -1374,16 +2049,16 @@ return false;
 					}
 				}
 				if(value != null){
-					parameters.put("param14",value);
+					parameters.put("param18",value);
 				}
 				else
 				{
-					parameters.put("param14","result5_object");
+					parameters.put("param18","result5_object");
 				}
 				varLen = "result6_object".length();
 				value=userVarMap.get("result6_object");
 				if(value != null){
-					parameters.put("param15",value);
+					parameters.put("param19",value);
 				}
 				// It must be a result value or date
 				else if("result6_object".endsWith("_value"))
@@ -1414,14 +2089,108 @@ return false;
 					}
 				}
 				if(value != null){
-					parameters.put("param15",value);
+					parameters.put("param19",value);
 				}
 				else
 				{
-					parameters.put("param15","result6_object");
+					parameters.put("param19","result6_object");
 				}
 				Result finalResult = logicService.eval(patient, "mostRecentResult",parameters);
 				resultLookup.put("finalResult",finalResult);
+		if((finalResult.isNull())){
+			//preprocess any || operator ;
+			String val = doAction("");
+			userVarMap.put("finalResult_date",  val);
+		}
+		if((finalResult.isNull())){
+			//preprocess any || operator ;
+			String val = doAction("");
+			userVarMap.put("finalResult_value",  val);
+		}
+				varLen = "finalResult_object".length();
+				value=userVarMap.get("finalResult_object");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("finalResult_object".endsWith("_value"))
+				{
+					variable = "finalResult_object".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResult_object".endsWith("_date"))
+				{
+					variable = "finalResult_object".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResult_object".endsWith("_object"))
+				{
+					variable = "finalResult_object".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResult_object") != null){
+						value = resultLookup.get("finalResult_object").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","finalResult_object");
+				}
+				Result finalResultConceptName = logicService.eval(patient, "conceptNameResult",parameters);
+				resultLookup.put("finalResultConceptName",finalResultConceptName);
+				varLen = "finalResultConceptName".length();
+				value=userVarMap.get("finalResultConceptName");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("finalResultConceptName".endsWith("_value"))
+				{
+					variable = "finalResultConceptName".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResultConceptName".endsWith("_date"))
+				{
+					variable = "finalResultConceptName".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResultConceptName".endsWith("_object"))
+				{
+					variable = "finalResultConceptName".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResultConceptName") != null){
+						value = resultLookup.get("finalResultConceptName").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","finalResultConceptName");
+				}
+				Result finalResultUnits = logicService.eval(patient, "getConceptUnits",parameters);
+				resultLookup.put("finalResultUnits",finalResultUnits);
 			return true;
 		}
 	return false;	}
@@ -1430,6 +2199,8 @@ return false;
 		this.actions = new ArrayList<String>();
 		actions.add("|| finalResult_date ||@hba1cResultDate");
 		actions.add("|| finalResult_value ||@hba1cResultValue");
+		actions.add("|| finalResultConceptName_value ||@hba1cConceptName");
+		actions.add("|| finalResultUnits_value ||@hba1cResultUnit");
 	}
 
 private String substituteString(String variable,String outStr){

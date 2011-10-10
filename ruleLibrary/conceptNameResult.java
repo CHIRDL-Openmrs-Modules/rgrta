@@ -62,7 +62,6 @@ public class conceptNameResult implements Rule
 	public Result eval(LogicContext context, Patient patient,
 			Map<String, Object> parameters) throws LogicException
 			{
-		System.out.println("parameters: "+parameters);
 
 		Result result = Result.emptyResult();
 		Result conceptNameResult = null;

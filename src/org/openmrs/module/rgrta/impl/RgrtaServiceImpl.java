@@ -54,7 +54,7 @@ import org.openmrs.module.chirdlutil.hibernateBeans.LocationTagAttributeValue;
 import org.openmrs.module.chirdlutil.service.ChirdlUtilService;
 import org.openmrs.module.rgrta.hibernateBeans.OldRule;
 import org.openmrs.module.rgrta.hibernateBeans.PatientFamily;
-import org.openmrs.module.rgrta.hibernateBeans.Statistics;
+import org.openmrs.module.atd.hibernateBeans.Statistics;
 import org.openmrs.module.rgrta.hibernateBeans.Study;
 import org.openmrs.module.rgrta.hibernateBeans.StudyAttributeValue;
 import org.openmrs.module.rgrta.service.RgrtaService;
@@ -1040,6 +1040,11 @@ public class RgrtaServiceImpl implements RgrtaService
 			return getRgrtaDAO().getPendingHL7Exports();
 			
 		}
+		
+		public RgrtaHL7Export getNextPendingHL7Export(String resend) {
+			return getRgrtaDAO().getNextPendingHL7Export(resend);
+			
+		}
 
 		public void saveRgrtaHL7Export(RgrtaHL7Export export) {
 
@@ -1100,27 +1105,5 @@ public class RgrtaServiceImpl implements RgrtaService
 		
 		public RgrtaHL7ExportStatus getRgrtaExportStatusById (Integer id){
 			return getRgrtaDAO().getRgrtaExportStatusById( id);
-		}
-		
-		public List<Object[]> getFormsPrintedByWeek(String formName, String locationName) {
-			return getRgrtaDAO().getFormsPrintedByWeek(formName, locationName);
-		}
-		
-		public List<Object[]> getFormsScannedByWeek(String formName, String locationName) {
-			return getRgrtaDAO().getFormsScannedByWeek(formName, locationName);
-		}
-		
-		public List<Object[]> getFormsScannedAnsweredByWeek(String formName, String locationName) {
-			return getRgrtaDAO().getFormsScannedAnsweredByWeek(formName, locationName);
-		}
-		public List<Object[]> getFormsScannedAnythingMarkedByWeek(String formName, String locationName){
-			return getRgrtaDAO().getFormsScannedAnythingMarkedByWeek(formName,locationName);	
-		}
-		public List<Object[]> getQuestionsScanned(String formName, String locationName) {
-			return getRgrtaDAO().getQuestionsScanned(formName, locationName);
-		}
-
-		public List<Object[]> getQuestionsScannedAnswered(String formName, String locationName) {
-			return getRgrtaDAO().getQuestionsScannedAnswered(formName, locationName);
 		}
 }

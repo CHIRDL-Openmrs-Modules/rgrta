@@ -13,6 +13,7 @@ import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.FN;
 import ca.uhn.hl7v2.model.v25.datatype.IS;
+import ca.uhn.hl7v2.model.v25.datatype.PL;
 import ca.uhn.hl7v2.model.v25.datatype.ST;
 import ca.uhn.hl7v2.model.v25.datatype.XCN;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
@@ -105,16 +106,25 @@ public class HL7EncounterHandler25 extends
 
 	public String getLocation(Message message)
 	{
+		//For one application, we want the building so that we have the name
+		//of the hospital.  Other application don't contain buildings, they contain 
+		//the detail of the point of care (i.e. practices). 
 		PV1 pv1 = getPV1(message);
-		IS building = pv1.getAssignedPatientLocation().getBuilding();
+		PL patientLocation = pv1.getAssignedPatientLocation();
+		IS building = null;
 		String location = null;
-		if (building != null){
-			location = building.getValue();
+		if (patientLocation!=null){
+			building = patientLocation.getBuilding();
+			if (building != null && building.getValue()!= null ){
+				return building.getValue();	
+			}
 			
-		}
-		else {
 			logger.error(" building is null");
-			location = pv1.getAssignedPatientLocation().getPointOfCare().getValue();
+			IS poc = patientLocation.getPointOfCare();
+			if (poc != null){
+				return  patientLocation.getPointOfCare().getValue();
+			}
+			
 		}
 		return location;
 	}

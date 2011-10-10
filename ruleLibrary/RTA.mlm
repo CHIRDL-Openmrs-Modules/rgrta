@@ -19,8 +19,8 @@ Data:
 
 mode:=read {mode from Parameters};
 If (mode = PRODUCE) then   
-asthma_cohort := read last {ASTHMA_COHORT from RMRS};    
-diabetes_suspected := read last {DIABETES_COHORT from RMRS};      
+asthma_cohort := read exist {ASTHMA_COHORT from CHICA};    
+diabetes_suspected := read last {DIABETES_COHORT from CHICA};      
 endif
 
 ;;

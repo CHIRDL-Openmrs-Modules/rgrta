@@ -7,17 +7,20 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Properties;
-import java.util.Random;
+import java.util.Random; 
+import java.util.Locale;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Concept;
+import org.openmrs.ConceptDatatype;
 import org.openmrs.FieldType;
 import org.openmrs.Form;
 import org.openmrs.FormField;
@@ -29,15 +32,16 @@ import org.openmrs.api.FormService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.context.Context;
 import org.openmrs.logic.LogicService;
-import org.openmrs.module.rgrta.service.RgrtaService;
 import org.openmrs.module.atd.TeleformTranslator;
 import org.openmrs.module.atd.datasource.TeleformExportXMLDatasource;
 import org.openmrs.module.atd.hibernateBeans.FormAttributeValue;
 import org.openmrs.module.atd.hibernateBeans.FormInstance;
+import org.openmrs.module.atd.hibernateBeans.Statistics;
 import org.openmrs.module.atd.service.ATDService;
+import org.openmrs.module.chirdlutil.util.XMLUtil;
 import org.openmrs.module.rgrta.hibernateBeans.Encounter;
-import org.openmrs.module.rgrta.hibernateBeans.Statistics;
 import org.openmrs.module.rgrta.service.EncounterService;
+import org.openmrs.module.rgrta.service.RgrtaService;
 import org.openmrs.module.rgrta.xmlBeans.Choose;
 import org.openmrs.module.rgrta.xmlBeans.Field;
 import org.openmrs.module.rgrta.xmlBeans.FormConfig;
@@ -51,7 +55,6 @@ import org.openmrs.module.rgrta.xmlBeans.Score;
 import org.openmrs.module.rgrta.xmlBeans.Scores;
 import org.openmrs.module.rgrta.xmlBeans.Then;
 import org.openmrs.module.rgrta.xmlBeans.Value;
-import org.openmrs.module.chirdlutil.util.XMLUtil;
 
 /**
  * @author Tammy Dugan
@@ -67,7 +70,7 @@ public class Util
 	private static Log log = LogFactory.getLog( Util.class );
 	public static final Random GENERATOR = new Random();
 	
-	public synchronized static int getMaxDssElements(Integer formId,
+	public static int getMaxDssElements(Integer formId,
 			Integer locationTagId,Integer locationId)
 	{
 		String propertyValue = null;
@@ -95,7 +98,7 @@ public class Util
 		return maxDssElements;
 	}
 	
-	public synchronized static void saveObs(Patient patient, Concept currConcept,
+	public static void saveObs(Patient patient, Concept currConcept,
 			int encounterId, String value, FormInstance formInstance,
 			Integer ruleId, Integer locationTagId)
 	{
@@ -142,6 +145,24 @@ public class Util
 			}else{
 				obs.setValueCoded(answer);
 			}
+		} else if (datatypeName.equalsIgnoreCase("Date")){
+			try
+			{
+				
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			    Date resultDate = sdf.parse(value);
+				obs.setValueDatetime(resultDate);
+			} catch (NumberFormatException e)
+			{
+				obs.setValueText(value);
+				log.error("Could not save value: " + value
+						+ " to the database for concept "+currConcept.getName().getName() + " Stored as text.");
+			}catch (Exception e)
+			{
+				obs.setValueText(value);
+				log.error("Could not parse value: " + value
+						+ " to the database for concept "+currConcept.getName().getName() +" Stored as text.");
+			}
 		} else
 		{
 			obs.setValueText(value);
@@ -170,14 +191,6 @@ public class Util
 		{
 			Integer formInstanceId = formInstance.getFormInstanceId();
 			Integer locationId = formInstance.getLocationId();
-			//Since PWS forms get scanned much later, sometimes the next day, 
-			//set the observation time as the time the form is printed
-			if(formName != null && formName.equalsIgnoreCase("PWS")){
-				List<Statistics> stats = rgrtaService.getStatByFormInstance(formInstanceId, formName,locationId);
-				if(stats != null&&stats.size()>0){
-					obsDate = stats.get(0).getPrintedTimestamp(); 
-				}
-			}
 			
 			if(obsDate == null){
 				obsDate = new Date();
@@ -185,49 +198,34 @@ public class Util
 			
 			obs.setObsDatetime(obsDate);
 			obsService.saveObs(obs, null);
+			ATDService atdService = Context.getService(ATDService.class);
 			
-			/*if (ruleId != null)
-			{
-				List<Statistics> statistics = rgrtaService.getStatByIdAndRule(
-						formInstanceId, ruleId, formName,locationId);
+			// If save obs is run from produce instead of consume,  it is receiving a
+			// ruleid as a parameter, but no statistics exist in the table yet.
+			// So, no need to query by rule id and update, we will always create a new statistic.
+			
+			
+			Statistics stat = new Statistics();
 
-				if (statistics != null)
-				{
-					Statistics stat = statistics.get(0);
-
-					if (stat.getObsvId() == null)
-					{
-						stat.setObsvId(obs.getObsId());
-						rgrtaService.updateStatistics(stat);
-					} else
-					{
-						stat = new Statistics(stat);
-						stat.setObsvId(obs.getObsId());
-						rgrtaService.createStatistics(stat);
-					}
-				}
-			} else
-			{
-				List<Statistics> statistics = rgrtaService.getStatByFormInstance(formInstanceId, formName,locationId);
-				Statistics stat = new Statistics();
-
-				stat.setAgeAtVisit(org.openmrs.module.rgrta.util.Util
-						.adjustAgeUnits(patient.getBirthdate(), null));
-				stat.setEncounterId(encounterId);
-				stat.setFormInstanceId(formInstanceId);
-				stat.setLocationTagId(locationTagId);
-				stat.setFormName(formName);
-				stat.setObsvId(obs.getObsId());
-				stat.setPatientId(patient.getPatientId());
-				stat.setRuleId(ruleId);
-				stat.setLocationId(locationId);
-				if(statistics != null&&statistics.size()>0){
-					Statistics oldStat = statistics.get(0);
-					stat.setPrintedTimestamp(oldStat.getPrintedTimestamp());
-					stat.setScannedTimestamp(oldStat.getScannedTimestamp());
-				}
-				rgrtaService.createStatistics(stat);
-			}*/
+			stat.setAgeAtVisit(org.openmrs.module.rgrta.util.Util
+					.adjustAgeUnits(patient.getBirthdate(), null));
+			stat.setEncounterId(encounterId);
+			stat.setFormInstanceId(formInstanceId);
+			stat.setLocationTagId(locationTagId);
+			stat.setFormName(formName);
+			stat.setObsvId(obs.getObsId());
+			stat.setPatientId(patient.getPatientId());
+			stat.setRuleId(ruleId);
+			stat.setLocationId(locationId);
+			stat.setScannedTimestamp(obsDate);
+			String answer = obs.getValueAsString(new Locale("en_US"));
+			if (answer == null || answer.trim().equalsIgnoreCase("")){
+				answer = obs.getValueText();
+			}
+			stat.setAnswer(answer);
+			
+			atdService.createStatistics(stat);
+			
 		}
 	}
 	
@@ -240,7 +238,7 @@ public class Util
 	 * @param cutoff date to calculate age from
 	 * @return String age with units 
 	 */
-	public synchronized static String adjustAgeUnits(Date birthdate, Date cutoff)
+	public  static String adjustAgeUnits(Date birthdate, Date cutoff)
 	{
 		int years = org.openmrs.module.chirdlutil.util.Util.getAgeInUnits(birthdate, cutoff, YEAR_ABBR);
 		int months = org.openmrs.module.chirdlutil.util.Util.getAgeInUnits(birthdate, cutoff, MONTH_ABBR);
@@ -265,7 +263,7 @@ public class Util
 		return days + " " + DAY_ABBR;
 	}
 	
-	public synchronized static boolean isValidSSN( String ssnFull){
+	public  static boolean isValidSSN( String ssnFull){
 		boolean valid = true;
 		String ssn = null;
 		

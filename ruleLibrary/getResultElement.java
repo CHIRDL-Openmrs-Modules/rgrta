@@ -46,7 +46,6 @@ public class getResultElement implements Rule
 			Object param1Obj = parameters.get("param1");
 			if (param1Obj != null){
 				index = Integer.parseInt((String)param1Obj);
-				System.out.println("the index is " +  index);
 			}
 			
 			results = (List<Result>) parameters.get("param2");
@@ -55,11 +54,14 @@ public class getResultElement implements Rule
 		if (index != null && results != null && index < results.toArray().length)
 		{
 			distinctResult = (Result) results.toArray()[index];
-			System.out.println("The result is" + distinctResult.getResultObject().toString());
-			return distinctResult;
 		}
-		
-		return Result.emptyResult();
+		if(distinctResult == null){
+			distinctResult = new Result();
+		}
+		if (distinctResult.toString()== null){
+			distinctResult.setValueText(String.valueOf(distinctResult.toNumber()));
+		}
+		return  distinctResult;
 	}
 
 	/**

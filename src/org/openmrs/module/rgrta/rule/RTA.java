@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - RTA.mlm on Wed Oct 27 11:02:23 EDT 2010
+ Translated from - RTA.mlm on Thu Mar 03 15:21:53 EST 2011
 
  Title:  RTA
  Filename:  RTA
@@ -247,7 +247,7 @@ return false;
 				new LogicCriteria("ASTHMA_COHORT").last());
 			resultLookup.put("asthma_cohort",asthma_cohort);
 			Result diabetes_suspected=context.read(
-				patient,context.getLogicDataSource("RMRS"),
+				patient,context.getLogicDataSource("CHICA"),
 				new LogicCriteria("DIABETES_COHORT").last());
 			resultLookup.put("diabetes_suspected",diabetes_suspected);}
 
@@ -259,7 +259,7 @@ return false;
 				Object value = null;
 				String variable = null;
 				int varLen = 0;
-		if((!asthma_cohort.isNull()&&asthma_cohort.toString().equalsIgnoreCase("true"))){
+		if(asthma_cohort.exists()){
 				varLen = "Asthma_Alert".length();
 				value=userVarMap.get("Asthma_Alert");
 				if(value != null){

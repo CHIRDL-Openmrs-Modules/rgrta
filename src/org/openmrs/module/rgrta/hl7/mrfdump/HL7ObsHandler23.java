@@ -13,9 +13,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Logger;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
+import org.openmrs.Encounter;
 import org.openmrs.Location;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
+import org.openmrs.api.APIException;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
@@ -26,20 +28,22 @@ import org.openmrs.module.sockethl7listener.HL7PatientHandler;
 import org.openmrs.module.sockethl7listener.HL7SocketHandler;
 
 import ca.uhn.hl7v2.HL7Exception;
+import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.Varies;
 import ca.uhn.hl7v2.model.v23.datatype.CE;
+import ca.uhn.hl7v2.model.v23.datatype.ID;
 import ca.uhn.hl7v2.model.v23.datatype.NM;
 import ca.uhn.hl7v2.model.v23.datatype.ST;
 import ca.uhn.hl7v2.model.v23.datatype.TS;
 import ca.uhn.hl7v2.model.v23.datatype.TX;
 import ca.uhn.hl7v2.model.v23.group.ORU_R01_ORDER_OBSERVATION;
+import ca.uhn.hl7v2.model.v23.message.ADT_A01;
 import ca.uhn.hl7v2.model.v23.message.ORU_R01;
 import ca.uhn.hl7v2.model.v23.segment.MSH;
 import ca.uhn.hl7v2.model.v23.segment.OBR;
 import ca.uhn.hl7v2.model.v23.segment.OBX;
 import ca.uhn.hl7v2.model.v23.segment.PID;
-import ca.uhn.hl7v2.model.v23.message.ADT_A01;
 import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.validation.impl.NoValidation;
 
@@ -323,6 +327,19 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 	{
 		CE ceObsIdentifier = getOBX(message, orderRep, obxRep)
 				.getObservationIdentifier();
+		String identifier = ceObsIdentifier.getIdentifier().toString();
+		Integer ident = null;
+		try {
+			ident = Integer.parseInt(identifier);
+		} catch (Exception e) {
+			//not and integer so set a bogus value since we do not use this value.
+			try {
+				ceObsIdentifier.getIdentifier().setValue("1");
+			} catch (DataTypeException e1) {
+				
+			}
+		}
+		
 		return ceObsIdentifier.getIdentifier().toString();
 	}
 
@@ -355,6 +372,12 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 				ST data = (ST) value.getData();
 				dataString = data.getValue();
 			}
+			
+			if (value.getData() instanceof NM)
+			{
+				NM data = (NM) value.getData();
+				dataString = data.getValue();
+			}
 
 			return dataString;
 		}
@@ -377,7 +400,7 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 		return null;
 	}
 
-	public Double getNumericResult(Message message, int orderRep, int obxRep)
+	public Double getNumericResult(Message message, int orderRep, int obxRep) throws NumberFormatException
 	{
 		double dVal = 0;
 		Varies[] values = getOBX(message, orderRep, obxRep)
@@ -393,8 +416,9 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 				try
 				{
 					dVal = Double.parseDouble(nmvalue);
-				} catch (NumberFormatException ex)
+				} catch (Exception ex)
 				{
+					return null;
 				}
 			}
 		}
@@ -413,6 +437,10 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 			intObxValueID = Integer.parseInt(stConceptId);
 		} catch (NumberFormatException ne)
 		{
+			//For datasource, we don't want to miss coded obs just because of
+			//invalid codes that are not numeric or are null.  So set string to a bogus integer value
+			//since it is never used.
+			intObxValueID = 99999;
 			logger
 					.warn("PARSE WARNING: Unable to parse integer from CE observation value id string - Invalid value in OBX  = "
 							+ stConceptId
@@ -528,10 +556,15 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 					int numObs = order.getOBSERVATIONReps();
 					for (int j = 0; j < numObs; j++)
 					{
-						Obs obs = hl7SocketHandler.CreateObservation(null,
-								false, message, i, j, existingLoc,
-								resultPatient);
-						allObs.add(obs);
+						
+						String result = this.getResultStatus(message, i, j);
+						if (result != null && !result.trim().equalsIgnoreCase("X") ){
+							Obs obs = hl7SocketHandler.CreateObservation(null,
+									false, message, i, j, existingLoc,
+									resultPatient);
+							
+							allObs.add(obs);
+						}
 					}
 				}
 				
@@ -540,6 +573,7 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 		}
 		return allObs;
 	}
+	
 
 	/* (non-Javadoc)
 	 * @see org.openmrs.module.sockethl7listener.HL7ObsHandler#getReps(ca.uhn.hl7v2.model.Message)
@@ -557,4 +591,41 @@ public class HL7ObsHandler23 implements HL7ObsHandler
 		}
 		return reps;
 	}
+	
+	
+	public String getResultStatus(Message message, int orderRep, int obxRep)
+	{
+		String result = "";
+		OBX obx = getOBX(message, orderRep, obxRep);
+		ID status = obx.getObservResultStatus();
+		if (status != null){
+			result = status.getValue();
+		}	
+		return result;
+		
+	}
+	
+	// Handles OBX segments that indicate NM numeric as data type, but do not store a numeric value
+	// in the value field.  This method prevents that non-numeric value from getting 
+	// set to 0 by default. The non-numeric value still gets stored and not lost.
+	public String setValueTypeToString(Message message, int orderRep, int obxRep)
+	{
+		String dataType = "";
+		OBX obx = getOBX(message, orderRep, obxRep);
+		if (obx != null)
+			try {
+				ID type = obx.getValueType();
+				String value = type.getValue();
+				if (value != null && value.equalsIgnoreCase("NM")){
+					obx.getValueType().setValue("ST");
+				}
+				
+			} catch (DataTypeException e) {
+				
+			}
+			
+		return dataType;
+		
+	}
+	
 }

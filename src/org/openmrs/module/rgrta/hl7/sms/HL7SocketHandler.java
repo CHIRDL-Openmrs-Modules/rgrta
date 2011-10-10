@@ -29,6 +29,7 @@ import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
 import org.openmrs.Role;
 import org.openmrs.User;
+import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.LocationService;
@@ -60,6 +61,7 @@ import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.app.ApplicationException;
 import ca.uhn.hl7v2.model.Message;
+import ca.uhn.hl7v2.model.Varies;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.parser.EncodingNotSupportedException;
@@ -96,7 +98,7 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 	 * @see org.openmrs.module.sockethl7listener.HL7SocketHandler#processMessage(ca.uhn.hl7v2.model.Message)
 	 */
 	@Override
-	public synchronized Message processMessage(Message message,HashMap<String,Object> parameters) throws ApplicationException
+	public  Message processMessage(Message message,HashMap<String,Object> parameters) throws ApplicationException
 	{
 		ATDService atdService = Context.getService(ATDService.class);
 
@@ -271,45 +273,15 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 						encounterDate);
 			}
 			
-			
-			/*
-			PatientIdentifier patientIdentifier = hl7Patient
-					.getPatientIdentifier();
-			if (patientIdentifier != null)
-			{
-				String mrn = patientIdentifier.getIdentifier();
-				// look for matched patient
-				Patient matchedPatient = findPatient(mrn);
-				if (matchedPatient == null)
-				{
-					resultPatient = createPatient(hl7Patient);
-				} else
-				{
-					resultPatient = updatePatient(matchedPatient, hl7Patient,
-							encounterDate);
-				}
-				
-			    parameters.put("processCheckinHL7End",new java.util.Date());
-				
-			    parameters.put("queryKiteAliasStart",new java.util.Date());
-				
-				// merge alias medical record number patients with the matched
-				// patient
-				processAliasString(mrn, resultPatient);
-				
-				parameters.put("queryKiteAliasEnd",new java.util.Date());
-			} */
-			
-
 		    parameters.put("processCheckinHL7End",new java.util.Date());
 			
-		    parameters.put("queryKiteAliasStart",new java.util.Date());
+		    //parameters.put("queryKiteAliasStart",new java.util.Date());
 			
 			// merge alias medical record number patients with the matched
 			// patient
-			processAliasString(mrn, resultPatient);
+			//processAliasString(mrn, resultPatient);
 			
-			parameters.put("queryKiteAliasEnd",new java.util.Date());
+			//parameters.put("queryKiteAliasEnd",new java.util.Date());
 
 		} catch (RuntimeException e)
 		{
@@ -612,10 +584,8 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 					String  mrn = resultPatient.getPatientIdentifier().getIdentifier();
 					String incomingMessageString = this.parser.encode(message);
 					xmlDatasource.parseHL7ToObs(incomingMessageString,
-						enc.getPatientId(),mrn);
-						Obs obs = new Obs();
-					
-					
+						enc.getPatientId(),mrn);						
+								
 				}
 			}
 		} catch (HL7Exception e) {
@@ -627,7 +597,8 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 			xmlDatasource.getRegenObs(resultPatient.getPatientId());
 
 		if (message instanceof ca.uhn.hl7v2.model.v25.message.ORU_R01){
-		
+			//Our source for messages fo diabetes patients are always in the IHIE cohort
+			//Diabetes_cohort will always be true.
 			String conceptName = "DIABETES_COHORT";
 			Obs newObs = CreateObservation(enc, resultPatient, conceptName, 
 					"TRUE");
@@ -640,14 +611,20 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 			Util.saveObs(enc.getPatient(), cs.getConceptByName("DIABETES_COHORT"), 
 				enc.getEncounterId(), "TRUE");
 		}
+		
+		//Asthma patients are not always in the cohort.
 		ConceptService conceptService = Context.getConceptService();
 		Set<Obs> asthmaCohorts = regenObsMap.get("ASTHMA_COHORT");
-		
+		String asthma = "";
 		if (asthmaCohorts != null && !asthmaCohorts.isEmpty()){
+		
+			for ( Obs asthmaCohort : asthmaCohorts){
+				asthma = asthmaCohort.getValueText();
+			}
 			Concept asthmaConcept = conceptService.getConceptByName("ASTHMA_COHORT");
 			if (asthmaConcept != null){
 				Util.saveObs(enc.getPatient(), asthmaConcept, enc.getEncounterId(), 
-				"TRUE");
+				asthma);
 				
 			} else {
 				log.error("Asthma cohort concept does not exist.");
@@ -901,7 +878,6 @@ public class HL7SocketHandler extends org.openmrs.module.sockethl7listener.HL7So
 		return savedProviderUser;
 
 	}
-	
 	
 	
 

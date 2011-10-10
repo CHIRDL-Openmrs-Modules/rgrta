@@ -39,7 +39,7 @@ import org.openmrs.module.rgrta.hibernateBeans.Hcageinf;
 import org.openmrs.module.rgrta.hibernateBeans.Lenageinf;
 import org.openmrs.module.rgrta.hibernateBeans.OldRule;
 import org.openmrs.module.rgrta.hibernateBeans.PatientFamily;
-import org.openmrs.module.rgrta.hibernateBeans.Statistics;
+import org.openmrs.module.atd.hibernateBeans.Statistics;
 import org.openmrs.module.rgrta.hibernateBeans.Study;
 import org.openmrs.module.rgrta.hibernateBeans.StudyAttribute;
 import org.openmrs.module.rgrta.hibernateBeans.StudyAttributeValue;
@@ -109,7 +109,7 @@ public class HibernateRgrtaDAO implements RgrtaDAO
 	{
 		try
 		{
-			String sql = "select * from Rgrta_statistics where form_instance_id=? and form_name=? "+
+			String sql = "select * from atd_statistics where form_instance_id=? and form_name=? "+
 			"and location_id=?";
 			SQLQuery qry = this.sessionFactory.getCurrentSession()
 					.createSQLQuery(sql);
@@ -146,7 +146,7 @@ public class HibernateRgrtaDAO implements RgrtaDAO
 	{
 		try
 		{
-			String sql = "select * from Rgrta_statistics where form_instance_id=? "+
+			String sql = "select * from atd_statistics where form_instance_id=? "+
 			"and rule_id=? and form_name=? and location_id=?";
 			SQLQuery qry = this.sessionFactory.getCurrentSession()
 					.createSQLQuery(sql);
@@ -603,7 +603,7 @@ public class HibernateRgrtaDAO implements RgrtaDAO
 	{
 		try
 		{
-			String sql = "select * from Rgrta_statistics where obsv_id is not null and encounter_id=? and form_name=?";
+			String sql = "select * from atd_statistics where obsv_id is not null and encounter_id=? and form_name=?";
 			SQLQuery qry = this.sessionFactory.getCurrentSession()
 					.createSQLQuery(sql);
 			qry.setInteger(0, encounterId);
@@ -621,7 +621,7 @@ public class HibernateRgrtaDAO implements RgrtaDAO
 	{
 		try
 		{
-			String sql = "select * from Rgrta_statistics where rule_id is null and obsv_id is not null and encounter_id=? and form_name=?";
+			String sql = "select * from atd_statistics where rule_id is null and obsv_id is not null and encounter_id=? and form_name=?";
 			SQLQuery qry = this.sessionFactory.getCurrentSession()
 					.createSQLQuery(sql);
 			qry.setInteger(0, encounterId);
@@ -650,6 +650,37 @@ public class HibernateRgrtaDAO implements RgrtaDAO
 		qry.addEntity(RgrtaHL7Export.class);
 		List <RgrtaHL7Export> exports = qry.list();
 		return exports;
+	}
+	
+	public RgrtaHL7Export getNextPendingHL7Export(String resendImagesNotFound){
+		
+		try {
+			String resend = "";
+			if (resendImagesNotFound != null && (resendImagesNotFound.equalsIgnoreCase("yes")||
+					resendImagesNotFound.equalsIgnoreCase("true")))
+			{
+				RgrtaHL7ExportStatus status = getRgrtaExportStatusByName("image_not_found");
+				if (status != null ){
+					resend = " or status = " + status.getHl7ExportStatusId() ;
+				}
+			} 
+			
+			SQLQuery qry = this.sessionFactory.getCurrentSession()
+				.createSQLQuery("select * from Rgrta_hl7_export " +
+			" where voided = 0 and ((status = 1 and date_processed is null) " 
+						+ resend + " ) ");
+
+			
+			qry.addEntity(RgrtaHL7Export.class);
+			List <RgrtaHL7Export> exports = qry.list();
+			if (exports != null && exports.size() > 0) {
+				return exports.get(0);
+			}
+		} catch (HibernateException e) {
+			log.error(e);
+		}
+		
+		return null;
 	}
 
 	
@@ -785,156 +816,5 @@ public class HibernateRgrtaDAO implements RgrtaDAO
 		
 	}
 	
-	public List<Object[]> getFormsPrintedByWeek(String formName, String locationName) {
-		try {
-			LocationService locationService = Context.getLocationService();
-			Integer locationId = locationService.getLocation(locationName).getLocationId();
-			SQLQuery qry = this.sessionFactory.getCurrentSession().createSQLQuery(
-			    "select start_date, end_date,count(*) as count from ( "
-			            + "SELECT form_name,form_instance_id,DATE_FORMAT(DATE_SUB(printed_timestamp,"
-			            + "INTERVAL  DAYOFWEEK(printed_timestamp)+2  DAY),'%Y-%m-%d') as start_date,"
-			            + "DATE_FORMAT(DATE_SUB(printed_timestamp,INTERVAL  DAYOFWEEK(printed_timestamp)-4 DAY)"
-			            + ",'%Y-%m-%d') as end_date,location_id from (select form_name, form_instance_id, "
-			            + "max(printed_timestamp) as printed_timestamp,max(scanned_timestamp) as "
-			            + "scanned_timestamp,location_id from Rgrta_statistics where form_name=? and location_id=? and printed_timestamp is not null group by form_name,"
-			            + "form_instance_id,location_id) a "
-			            + ")a group by start_date,end_date order by start_date desc,end_date desc");
-			qry.setString(0, formName);
-			qry.setInteger(1, locationId);
-			return qry.list();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
 	
-	public List<Object[]> getFormsScannedByWeek(String formName, String locationName) {
-		try {
-			LocationService locationService = Context.getLocationService();
-			Integer locationId = locationService.getLocation(locationName).getLocationId();
-			SQLQuery qry = this.sessionFactory.getCurrentSession().createSQLQuery(
-			    "select start_date, end_date,count(*) as count from ( "
-			            + "SELECT form_name,form_instance_id,DATE_FORMAT(DATE_SUB(printed_timestamp,"
-			            + "INTERVAL  DAYOFWEEK(printed_timestamp)+2  DAY),'%Y-%m-%d') as start_date,"
-			            + "DATE_FORMAT(DATE_SUB(printed_timestamp,INTERVAL  DAYOFWEEK(printed_timestamp)-4 DAY)"
-			            + ",'%Y-%m-%d') as end_date,scanned_timestamp,location_id from (select form_name, form_instance_id, "
-			            + "max(printed_timestamp) as printed_timestamp,max(scanned_timestamp) as "
-			            + "scanned_timestamp,location_id from Rgrta_statistics where form_name=? and location_id=? "+
-			            "and printed_timestamp is not null and scanned_timestamp is not null group by form_name,"
-			            + "form_instance_id,location_id) a "
-			            + ")a group by start_date,end_date order by start_date desc,end_date desc");
-			qry.setString(0, formName);
-			qry.setInteger(1, locationId);
-			return qry.list();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public List<Object[]> getFormsScannedAnsweredByWeek(String formName, String locationName) {
-		try {
-			LocationService locationService = Context.getLocationService();
-			Integer locationId = locationService.getLocation(locationName).getLocationId();
-			SQLQuery qry = this.sessionFactory.getCurrentSession().createSQLQuery(
-			    "select start_date, end_date,count(*) as count from ( "
-			            + "SELECT form_name,form_instance_id,DATE_FORMAT(DATE_SUB(printed_timestamp,"
-			            + "INTERVAL  DAYOFWEEK(printed_timestamp)+2  DAY),'%Y-%m-%d') as start_date,"
-			            + "DATE_FORMAT(DATE_SUB(printed_timestamp,INTERVAL  DAYOFWEEK(printed_timestamp)-4 DAY)"
-			            + ",'%Y-%m-%d') as end_date,scanned_timestamp,location_id from (select form_name, form_instance_id, "
-			            + "max(printed_timestamp) as printed_timestamp,max(scanned_timestamp) as "
-			            + "scanned_timestamp,location_id from Rgrta_statistics where answer is "+
-			            "not null and answer not in ('NoAnswer') and form_name=? and location_id=? "+
-			            "and printed_timestamp is not null and scanned_timestamp is not null group by form_name,"
-			            + "form_instance_id,location_id) a "
-			            + ")a group by start_date,end_date order by start_date desc,end_date desc");
-			qry.setString(0, formName);
-			qry.setInteger(1, locationId);
-			return qry.list();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public List<Object[]> getFormsScannedAnythingMarkedByWeek(String formName, String locationName) {
-		try {
-			LocationService locationService = Context.getLocationService();
-			Integer locationId = locationService.getLocation(locationName).getLocationId();
-			SQLQuery qry = this.sessionFactory.getCurrentSession().createSQLQuery(
-			    "select start_date, end_date,count(*) as count from ( "
-			            + "SELECT form_name,form_instance_id,DATE_FORMAT(DATE_SUB(printed_timestamp,"
-			            + "INTERVAL  DAYOFWEEK(printed_timestamp)+2  DAY),'%Y-%m-%d') as start_date,"
-			            + "DATE_FORMAT(DATE_SUB(printed_timestamp,INTERVAL  DAYOFWEEK(printed_timestamp)-4 DAY)"
-			            + ",'%Y-%m-%d') as end_date,scanned_timestamp,location_id from (select form_name, form_instance_id, "
-			            + "max(printed_timestamp) as printed_timestamp,max(scanned_timestamp) as "
-			            + "scanned_timestamp,a.location_id from Rgrta_statistics a inner join obs e "+
-			            "on a.obsv_id=e.obs_id where form_name=? and a.location_id=? "+
-			            "and printed_timestamp is not null and scanned_timestamp is not null group by form_name,"
-			            + "form_instance_id,location_id) a "
-			            + ")a group by start_date,end_date order by start_date desc,end_date desc");
-			qry.setString(0, formName);
-			qry.setInteger(1, locationId);
-			return qry.list();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	public List<Object[]> getQuestionsScanned(String formName, String locationName) {
-		try {
-			LocationService locationService = Context.getLocationService();
-			Integer locationId = locationService.getLocation(locationName).getLocationId();
-			SQLQuery qry = this.sessionFactory.getCurrentSession().createSQLQuery(
-			    "select start_date, end_date,count(*) as count from ( "+
-			    "SELECT form_name,form_instance_id,rule_id,DATE_FORMAT(DATE_SUB(printed_timestamp, "+
-			    "INTERVAL  DAYOFWEEK(printed_timestamp)+2  DAY),'%Y-%m-%d') as start_date, "+
-			    "DATE_FORMAT(DATE_SUB(printed_timestamp,INTERVAL  DAYOFWEEK(printed_timestamp)-4 DAY) "+
-			    ",'%Y-%m-%d') as end_date,scanned_timestamp,location_id from (select form_name, "+
-			    "form_instance_id,rule_id,max(printed_timestamp) as printed_timestamp,"+
-			    "max(scanned_timestamp) as scanned_timestamp,location_id from Rgrta_statistics "+
-			    "where rule_id is not null and form_name=? and location_id=? "+
-			    "and printed_timestamp is not null and scanned_timestamp is not null group by form_name, "+
-			    "form_instance_id,rule_id,location_id) a)a group by start_date,end_date "+
-			    "order by start_date desc,end_date desc");
-			qry.setString(0, formName);
-			qry.setInteger(1, locationId);
-			return qry.list();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
-	
-	public List<Object[]> getQuestionsScannedAnswered(String formName, String locationName) {
-		try {
-			LocationService locationService = Context.getLocationService();
-			Integer locationId = locationService.getLocation(locationName).getLocationId();
-			SQLQuery qry = this.sessionFactory.getCurrentSession().createSQLQuery(
-			    "select start_date, end_date,count(*) as count from ( "
-			            + "SELECT form_name,form_instance_id,rule_id,DATE_FORMAT(DATE_SUB(printed_timestamp,"
-			            + "INTERVAL  DAYOFWEEK(printed_timestamp)+2  DAY),'%Y-%m-%d') as start_date,"
-			            + "DATE_FORMAT(DATE_SUB(printed_timestamp,INTERVAL  DAYOFWEEK(printed_timestamp)-4 DAY)"
-			            + ",'%Y-%m-%d') as end_date,scanned_timestamp,location_id from (select form_name, form_instance_id,rule_id, "
-			            + "max(printed_timestamp) as printed_timestamp,max(scanned_timestamp) as "
-			            + "scanned_timestamp,location_id from Rgrta_statistics where rule_id is not null "+
-			            "and answer is not null and answer not in ('NoAnswer') group by form_name,"
-			            + "form_instance_id,rule_id,location_id) a where form_name=? and location_id=? "+
-			            "and printed_timestamp is not null and scanned_timestamp is not null"
-			            + ")a group by start_date,end_date order by start_date desc,end_date desc");
-			qry.setString(0, formName);
-			qry.setInteger(1, locationId);
-			return qry.list();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
 }

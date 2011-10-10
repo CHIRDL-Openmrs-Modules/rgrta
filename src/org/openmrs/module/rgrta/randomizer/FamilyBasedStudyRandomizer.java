@@ -55,8 +55,7 @@ public class FamilyBasedStudyRandomizer extends BasicRandomizer implements
 
 			// make sure the patients has no previous visits before the study
 			// start date
-			List<Encounter> encounters = encounterService
-					.getEncounters(patient);
+			List<Encounter> encounters = encounterService.getEncountersByPatient(patient);
 
 			for (Encounter lookupEncounter : encounters)
 			{

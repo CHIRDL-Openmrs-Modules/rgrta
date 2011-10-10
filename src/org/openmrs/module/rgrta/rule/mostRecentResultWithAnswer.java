@@ -1,8 +1,11 @@
 package org.openmrs.module.rgrta.rule;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.api.context.Context;
 import org.openmrs.logic.LogicContext;
@@ -12,6 +15,7 @@ import org.openmrs.logic.Rule;
 import org.openmrs.logic.result.Result;
 import org.openmrs.logic.result.Result.Datatype;
 import org.openmrs.logic.rule.RuleParameterInfo;
+import org.openmrs.module.chirdlutil.util.Util;
 
 public class mostRecentResultWithAnswer implements Rule
 {
@@ -60,39 +64,56 @@ public class mostRecentResultWithAnswer implements Rule
 	public Result eval(LogicContext context, Patient patient,
 			Map<String, Object> parameters) throws LogicException
 	{
-	    System.out.println("parameters: "+parameters);
-    	String answer = (String) parameters.get("param1");
+	   // System.out.println("mostRecentResultWithAnswer() parameters: "+parameters);
+	    int i = 1;
+    	String answer = (String) parameters.get("param" + i);
     	Result results = Result.emptyResult();
-    	Result finalResult = null;
-    	int i = 2;
-		Object paramObj = "";
+    	List<Result>  list = new ArrayList<Result>();
+    	Obs finalResult = null;
+    	i++;
+    	
+		Object paramObj = parameters.get("param"+i);
 
 		while(paramObj != null){
 			paramObj = parameters.get("param"+i);
 			i++;
 			if(paramObj instanceof Result){
-				results = (Result) parameters.get("param"+i);
+				results = (Result) paramObj;
 			}else{
-
 				continue;
 			}
 			if(results != null){
 				for(Result result:results){
-					if(answer != null&&answer.equalsIgnoreCase(result.toString())){
-						Result matchedResult = result;
+				String name = ((Obs) result.getResultObject()).getValueCoded().getName().getName();
+					if(answer != null&&answer.equalsIgnoreCase(name)){
+						Obs matchedResult = (Obs) result.getResultObject();
 						if(finalResult==null||
-								matchedResult.getResultDate().compareTo(finalResult.getResultDate())>0){
+								matchedResult.getObsDatetime().compareTo(finalResult.getObsDatetime())>0){
 							finalResult = matchedResult;
 						}
 					}
 				}
 			}
 		}
+		
 		if(finalResult == null){
-			//finalResult = Result.emptyResult();
-			finalResult = new Result();
+			return Result.emptyResult();
 		} 
-		return finalResult;
+		
+		String name = finalResult.getValueCoded().getName().getName();
+		String titleCaseName = Util.toProperCase(name);
+		System.out.println("title case" + titleCaseName);
+		finalResult.getConcept().getName(Context.getLocale()).setName(titleCaseName);
+		
+		Result finalres = new Result(finalResult);
+		list.add(finalres);
+		finalres.setResultDate(finalResult.getObsDatetime());
+		finalres.setValueText("Not available");
+		
+		System.out.println("mostRecentResultWithAnswer() FINALresult name: "+ finalResult.getConcept().getName().toString());
+		System.out.println("mostRecentResultWithAnswer() FINALresult date: " + finalResult.getObsDatetime().toString());
+		
+		return new Result(list);
 	}
 	
 }

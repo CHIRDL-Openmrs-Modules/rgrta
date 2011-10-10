@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import org.openmrs.Location;
 import org.openmrs.Patient;
+import org.openmrs.api.FormService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
@@ -21,6 +22,7 @@ import org.openmrs.module.atd.service.ATDService;
 import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.rgrta.RgrtaStateActionHandler;
 import org.openmrs.module.rgrta.service.RgrtaService;
+
 
 /**
  * @author tmdugan
@@ -38,17 +40,30 @@ public class WaitForPrint implements ProcessStateAction
 		//lookup the patient again to avoid lazy initialization errors
 		PatientService patientService = Context.getPatientService();
 		LocationService locationService = Context.getLocationService();
+		ATDService atdService = Context.getService(ATDService.class);
+		FormService formService = Context.getFormService();
 		Integer patientId = patient.getPatientId();
 		patient = patientService.getPatient(patientId);
 		
 		
 		Integer locationTagId = patientState.getLocationTagId();
+		FormInstance formInstance = (FormInstance) parameters.get("formInstance");
+		if(formInstance == null){
+			RgrtaService rgrtaService = Context
+					.getService(RgrtaService.class);
+			Integer sessionId = patientState.getSessionId();
+			PatientState stateWithFormId = rgrtaService.getPrevProducePatientState(sessionId, 
+					patientState.getPatientStateId());
+			
+			formInstance = patientState.getFormInstance();
 	
-		RgrtaService RgrtaService = Context
-				.getService(RgrtaService.class);
-		
-		Integer sessionId = patientState.getSessionId();
-		ATDService atdService = Context.getService(ATDService.class);
+			if(formInstance == null&&stateWithFormId != null)
+			{
+				formInstance = stateWithFormId.getFormInstance();
+			}
+		}
+	
+		/*Integer sessionId = patientState.getSessionId();
 		PatientState stateWithFormId = atdService.getPrevPatientStateByAction(sessionId, patientState.getPatientStateId()
 		,"PRODUCE FORM INSTANCE");
 
@@ -62,20 +77,22 @@ public class WaitForPrint implements ProcessStateAction
 		if (formInstance == null){
 			formInstance =  (FormInstance) parameters.get("formInstance");
 		}
-		
+		*/
 		
 		atdService = Context.getService(ATDService.class);
 		patientState.setFormInstance(formInstance);
 		atdService.updatePatientState(patientState);
 		
 		String mergeDirectory = IOUtil
-				.formatDirectoryName(org.openmrs.module.atd.util.Util
-						.getFormAttributeValue(formInstance.getFormId(),
-								"defaultMergeDirectory", locationTagId,
-								formInstance.getLocationId()));
+		.formatDirectoryName(org.openmrs.module.atd.util.Util
+				.getFormAttributeValue(formInstance.getFormId(),
+						"defaultMergeDirectory", locationTagId,
+						formInstance.getLocationId()));
 		TeleformFileState teleformFileState = TeleformFileMonitor
-				.addToPendingStatesWithFilename(formInstance, mergeDirectory
-						+ formInstance.toString() + ".20");
+		.addToPendingStatesWithFilename(formInstance, mergeDirectory
+				+ formInstance.toString() + ".19");
+		teleformFileState.addParameter("patientState", patientState);
+		
 		
 		Location defaultLocation = locationService.getLocation("Default Location");
 		Integer defaultLocationId = 1;
@@ -85,11 +102,12 @@ public class WaitForPrint implements ProcessStateAction
 		patientState.setLocationId(defaultLocationId);
 		Integer formId = (Integer) parameters.get("formId");
 		patientState.setFormId(formId);
-		teleformFileState.addParameter("patientState", patientState);
+		
 	}
 
 	public void changeState(PatientState patientState,
 			HashMap<String, Object> parameters) {
+		
 		StateManager.endState(patientState);
 		RgrtaStateActionHandler.changeState(patientState.getPatient(), patientState
 				.getSessionId(), patientState.getState(),

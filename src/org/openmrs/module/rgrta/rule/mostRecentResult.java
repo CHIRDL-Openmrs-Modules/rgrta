@@ -1,8 +1,11 @@
 package org.openmrs.module.rgrta.rule;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+import org.openmrs.Concept;
+import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.api.context.Context;
 import org.openmrs.logic.LogicContext;
@@ -60,39 +63,89 @@ public class mostRecentResult implements Rule
 	public Result eval(LogicContext context, Patient patient,
 			Map<String, Object> parameters) throws LogicException
 	{
-		System.out.println("parameters: "+parameters);
-
+		
     	Result results = Result.emptyResult();
     	Result finalResult = null;
     	int i = 1;
 		Object paramObj = "";
-    	
-    	while(paramObj != null){
-    			paramObj = parameters.get("param"+i);
-				i++;
-		if(paramObj instanceof Result){
-    		results = (Result) parameters.get("param"+i);
+		Obs tempObs = null;
+		Obs finalobs = null;
+		
+		while(paramObj != null){
+    		paramObj = parameters.get("param"+i);
+			if(paramObj instanceof Result){
+	    		results = (Result) parameters.get("param"+(i));
+	    		
 			}else{
-
-			continue;
+				continue;
 			}
     		if(results != null){
     			for(Result result:results){
-				 if(finalResult == null||
+    				if (result != null && result.getResultObject() != null) {
+    					tempObs = ((Obs) result.getResultObject());
+    					if (tempObs != null){
+    						Concept concept = ((Obs) result.getResultObject()).getValueCoded(); 
+	    				}
+    				}
+    		
+    				 if(finalResult == null||
     						result.getResultDate().compareTo(finalResult.getResultDate())>0){
     						finalResult = result;
-							
-    					}
+    				 }
     			}	
-    		}
+    		} 
+    		i++;
     	}
 		if(finalResult == null){
 			finalResult = Result.emptyResult();
+			return finalResult;
 		}
+		
+		finalobs = ((Obs) finalResult.getResultObject());
+		
+		
 		if (finalResult.toString()== null){
-			finalResult.setValueText(String.valueOf(finalResult.toNumber()));
+			Double numeric = ((Obs) finalResult.getResultObject()).getValueNumeric();
+			
+			String txt = ((Obs) finalResult.getResultObject()).getValueText();
+			if (numeric == null  || String.valueOf(numeric).equalsIgnoreCase("null") 
+					|| String.valueOf(numeric).equalsIgnoreCase("")){
+				if (txt == null || txt.trim().equalsIgnoreCase("") || txt.equalsIgnoreCase("null")){
+				((Obs) finalResult.getResultObject()).setValueText("Not Available");
+					
+				} else {
+					finalResult.setValueText(txt);
+				}
+	
+			} else {
+				finalResult.setValueNumeric(numeric);
+				//numeric not null
+				finalResult.setValueText(String.valueOf(numeric));
+			}
+			
+			
+		} else {
+			Double numeric = ((Obs) finalResult.getResultObject()).getValueNumeric();
+			String txt = ((Obs) finalResult.getResultObject()).getValueText();
+			if (numeric == null){
+				if (txt == null || txt.trim().equalsIgnoreCase("") || txt.equalsIgnoreCase("null")){
+					finalResult.setValueText("Not Available");
+					((Obs) finalResult.getResultObject()).setValueText("Not Available");
+				
+					
+				} else {
+			
+					finalResult.setValueText(txt);
+		
+				}
+			} else {
+				finalResult.setValueNumeric(numeric);
+				
+				
+			}
 		}
-		return finalResult;
+		
+		return  new Result(finalResult);
 	}
 	
 }

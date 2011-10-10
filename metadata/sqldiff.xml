@@ -492,7 +492,6 @@ and task_config_id=(select max(task_config_id) from scheduler_task_config where 
 where b.cnt=0;
 	</sql>
 	</diff>
-		
 	<diff>
 		<version>1.4.3</version>
 		<author>Meena Sheley</author>
@@ -541,12 +540,100 @@ CREATE TABLE  `rgrta`.`rgrta_hl7_export` (
 	  `date_voided` datetime DEFAULT NULL,
 	  PRIMARY KEY (`hl7_export_map_id`)
 	) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8;
-	
+	</sql>
+    </diff>
 
-
+	<diff>
+        <version>1.4.4</version>
+        <author>Meena Sheley</author>
+        <date>May 11, 2011</date>
+        <description>
+        Add the ability to fax JITs
+        </description>
+    <sql>
+    insert into atd_state_action (action_name,action_description,action_class) 
+    values ('FAX JIT','Faxes any applicable JIT','org.openmrs.module.chica.action.FaxJIT');
+    
+    insert into atd_state (name,state_action_id) 
+    values ('JIT_fax',(select state_action_id from atd_state_action where action_name = 'FAX JIT'));
+    
+    insert into atd_state_mapping (initial_state,next_state,program_id) 
+    values (
+       (select state_id from atd_state where name = 'JIT_fax')
+      ,(select state_id from atd_state where name = 'JIT_wait_to_scan')
+      ,(select program_id from atd_program where name = 'rgrta'));
+      
+    update atd_state_mapping set next_state = (select state_id from atd_state where name = 'JIT_fax')
+    where initial_state = (select state_id from atd_state where name = 'JIT_printed');
+    
+    insert into atd_form_attribute (name, description) 
+    values ('auto-fax', 'Flag to indicate if a form should be faxed.');
+    
+    insert into atd_form_attribute_value (form_id, value, form_attribute_id, location_tag_id, location_id) 
+    select a.form_id, 'false', (select form_attribute_id from atd_form_attribute where name = 'auto-fax'), 
+    c.location_tag_id, c.location_id from form a, location_tag_map c, location b 
+    where a.retired=0 and c.location_id=b.location_id group by a.form_id, c.location_tag_id, c.location_id;
+    
+    insert into chirdlutil_location_attribute (name, description) 
+    values ('clinicFaxNumber', 'Clinic fax number where applicable forms will be routed');
+    
+    insert into chirdlutil_location_attribute_value (location_id, value, location_attribute_id) 
+    select a.location_id, '', (select location_attribute_id from chirdlutil_location_attribute where name='clinicFaxNumber')
+    from location a;
+    
+    insert into chirdlutil_location_attribute (name, description) 
+    values ('clinicFaxReceiver', 'The person, group, or general area that will receive faxes');
+    
+    insert into chirdlutil_location_attribute_value (location_id, value, location_attribute_id) 
+    select a.location_id, 'Clinical Staff', (select location_attribute_id from chirdlutil_location_attribute where name='clinicFaxReceiver')
+    from location a;
+    </sql>
+    </diff>
+	<diff>
+        <version>1.4.5</version>
+        <author>Meena Sheley</author>
+        <date>Oct 11, 2011</date>
+        <description>
+        ATD statistics table
+        </description>
+    <sql>
 	
+	CREATE TABLE `atd_statistics` (
+  `statistics_id` int(11) NOT NULL AUTO_INCREMENT,
+  `patient_id` int(11) NOT NULL,
+  `form_name` varchar(255) NOT NULL,
+  `rule_id` int(11) DEFAULT NULL,
+  `form_instance_id` int(11) NOT NULL,
+  `encounter_id` int(11) NOT NULL,
+  `position` int(11) DEFAULT NULL,
+  `answer` varchar(255) DEFAULT NULL,
+  `answer_err` varchar(255) DEFAULT NULL,
+  `printed_timestamp` varchar(255) DEFAULT NULL,
+  `scanned_timestamp` varchar(255) DEFAULT NULL,
+  `priority` int(11) DEFAULT NULL,
+  `obsv_id` int(11) DEFAULT NULL,
+  `language_response` varchar(255) DEFAULT NULL,
+  `age_at_visit` varchar(255) NOT NULL,
+  `location_tag_id` int(11) NOT NULL DEFAULT '1',
+  `location_id` int(11) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`statistics_id`),
+  KEY `stats_fk_pat` (`patient_id`),
+  KEY `stats_fk_rule` (`rule_id`),
+  KEY `stats_fk_encounter` (`encounter_id`),
+  KEY `stats_fk_obs` (`obsv_id`),
+  KEY `atd_stat_fk_loc_tag` (`location_tag_id`),
+  KEY `atd_stat_idx_instance` (`location_id`,`form_name`,`form_instance_id`),
+  KEY `atd_stat_idx_encounter` (`encounter_id`,`form_name`),
+  CONSTRAINT `atd_stat_fk_loc1` FOREIGN KEY (`location_id`) REFERENCES `location` (`location_id`),
+  CONSTRAINT `atd_stat_fk_loc_tag1` FOREIGN KEY (`location_tag_id`) REFERENCES `location_tag` (`location_tag_id`),
+  CONSTRAINT `stats_fk_encounter1` FOREIGN KEY (`encounter_id`) REFERENCES `encounter` (`encounter_id`),
+  CONSTRAINT `stats_fk_obs1` FOREIGN KEY (`obsv_id`) REFERENCES `obs` (`obs_id`),
+  CONSTRAINT `stats_fk_pat1` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`patient_id`),
+  CONSTRAINT `stats_fk_rule1` FOREIGN KEY (`rule_id`) REFERENCES `dss_rule` (`rule_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2891 DEFAULT CHARSET=utf8;
 	</sql>
 	</diff>
+	
 </sqldiff>
 
 

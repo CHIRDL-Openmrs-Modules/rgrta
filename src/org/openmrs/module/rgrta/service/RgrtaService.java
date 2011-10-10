@@ -22,7 +22,7 @@ import org.openmrs.module.rgrta.hibernateBeans.Hcageinf;
 import org.openmrs.module.rgrta.hibernateBeans.Lenageinf;
 import org.openmrs.module.rgrta.hibernateBeans.OldRule;
 import org.openmrs.module.rgrta.hibernateBeans.PatientFamily;
-import org.openmrs.module.rgrta.hibernateBeans.Statistics;
+import org.openmrs.module.atd.hibernateBeans.Statistics;
 import org.openmrs.module.rgrta.hibernateBeans.Study;
 import org.openmrs.module.rgrta.hibernateBeans.StudyAttributeValue;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,9 +38,7 @@ public interface RgrtaService
 			Patient patient,Integer encounterId,String dssType,
 			int maxDssElements,Integer sessionId);
 
-	public void updateStatistics(Statistics statistics);
-
-	public void createStatistics(Statistics statistics);
+	
 	
 	/**
 	 * @param ageMos
@@ -125,6 +123,10 @@ public interface RgrtaService
 
 	public List<RgrtaHL7Export> getPendingHL7Exports();
 	
+	public RgrtaHL7Export getNextPendingHL7Export(String optionalResend);
+
+
+	
 	public void saveRgrtaHL7Export(RgrtaHL7Export export);
 	
 	public List<RgrtaHL7Export> getPendingHL7ExportsByEncounterId(Integer encounterId);
@@ -153,17 +155,5 @@ public interface RgrtaService
 	public RgrtaHL7ExportStatus getRgrtaExportStatusByName (String name);
 	
 	public RgrtaHL7ExportStatus getRgrtaExportStatusById (Integer id);
-	
-	public List<Object[]> getFormsPrintedByWeek(String formName, String locationName);
-	
-	public List<Object[]> getFormsScannedByWeek(String formName, String locationName);
-	
-	public List<Object[]> getFormsScannedAnsweredByWeek(String formName, String locationName);
-	
-	public List<Object[]> getFormsScannedAnythingMarkedByWeek(String formName, String locationName);
-	
-	public List<Object[]> getQuestionsScanned(String formName, String locationName);
-
-	public List<Object[]> getQuestionsScannedAnswered(String formName, String locationName);
 	
 }

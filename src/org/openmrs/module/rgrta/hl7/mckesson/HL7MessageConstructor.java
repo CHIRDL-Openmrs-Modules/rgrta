@@ -1,7 +1,12 @@
 package org.openmrs.module.rgrta.hl7.mckesson;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
@@ -14,6 +19,7 @@ import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.OBR;
+import ca.uhn.hl7v2.model.v25.segment.PID;
 import ca.uhn.hl7v2.model.v25.segment.PV1;
 
 
@@ -29,6 +35,7 @@ import ca.uhn.hl7v2.model.v25.segment.PV1;
 public class HL7MessageConstructor extends org.openmrs.module.sockethl7listener.HL7MessageConstructor {
 
 	String formInstance = null;
+	private Log log = LogFactory.getLog(this.getClass());
 	private Properties props;
 	
 	public HL7MessageConstructor() {
@@ -74,12 +81,8 @@ public class HL7MessageConstructor extends org.openmrs.module.sockethl7listener.
 			obr.getResultCopiesTo(0).getGivenName().setValue(
 			"");
 			obr.getResultCopiesTo(0).getIDNumber().setValue("");
-		} catch (DataTypeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (HL7Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		}  catch (Exception e){
+			log.error(org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
 		}
 
 
@@ -96,28 +99,7 @@ public class HL7MessageConstructor extends org.openmrs.module.sockethl7listener.
 		
 		try {
 			
-		/*	PersonAttribute pocAttr = enc.getProvider().getAttribute("POC");
-			if (pocAttr != null) {
-				poc = pocAttr.getValue();
-				if (poc != null && !poc.equals("")) {
-					pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
-					pv1.getAssignedPatientLocation().getFacility()
-					.getNamespaceID().setValue(poc);
-				}
-
-			}
-			
-			
-			if (props != null){
-				String useClinicAsProvider = props.getProperty("use_clinic_as_provider");
-				if (useClinicAsProvider != null && useClinicAsProvider.equalsIgnoreCase("true")) {
-					pv1.getAttendingDoctor(0).getFamilyName().getSurname().setValue(poc);
-					pv1.getAttendingDoctor(0).getGivenName().setValue("");
-					pv1.getAttendingDoctor(0).getIDNumber().setValue(poc);
-					pv1.getVisitNumber().getIDNumber().setValue("");
-				}
-			}
-			*/
+		
 			
 			Integer userId = enc.getProvider().getUserId();
 			Person providerPerson = personService.getPerson(userId);
@@ -165,6 +147,31 @@ public class HL7MessageConstructor extends org.openmrs.module.sockethl7listener.
 	public void setAssignAuthority(PatientIdentifier pi) {
 		
 		super.setAssignAuthority(pi);
+	}
+	
+	@Override
+	public PID AddSegmentPID(Patient pat) {
+		
+		
+		try {
+			PID pid = super.AddSegmentPID(pat);
+			PersonService personService = Context.getPersonService();
+			PatientIdentifier pi = pat.getPatientIdentifier();
+			String assignAuthFromIdentifierType = getAssigningAuthorityFromIdentifierType(pi);
+			pid.getPatientIdentifierList(0).getAssigningAuthority()
+				.getNamespaceID().setValue(assignAuthFromIdentifierType);
+			
+		
+			return pid;
+
+		} catch (DataTypeException e) {
+			log.error(e);
+			return null;
+		} catch (HL7Exception e) {
+			log.error(e);
+			return null;
+		}
+
 	}
 
 	

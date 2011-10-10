@@ -75,10 +75,11 @@ public class InitializeOldStates implements Runnable
 						
 						Integer locationTagId = tag.getLocationTagId();
 						Integer locationId = location.getLocationId();
-						
-				List<PatientState> unfinishedStatesToday = atdService
+						locationTagId = 1;
+				List <PatientState> unfinishedStatesToday = atdService
 						.getUnfinishedPatientStatesAllPatients(null,locationTagId,locationId);
-
+				log.error("unfinished states " + unfinishedStatesToday.size());
+				
 				RgrtaStateActionHandler handler = RgrtaStateActionHandler
 						.getInstance();
 
@@ -106,6 +107,12 @@ public class InitializeOldStates implements Runnable
 									currPatientState);
 						}
 						HashMap<String,Object> parameters = new HashMap<String,Object>();
+						System.out.println("form instance is " + currPatientState.getFormInstanceId() +
+								". Form is " + currPatientState.getFormId() +
+								". location is " + currPatientState.getLocationId() + 
+								". Form instance string " + currPatientState.getFormInstance());
+						
+						
 						parameters.put("formInstance", currPatientState.getFormInstance());
 						handler.processAction(stateAction, patient,
 								currPatientState, parameters);

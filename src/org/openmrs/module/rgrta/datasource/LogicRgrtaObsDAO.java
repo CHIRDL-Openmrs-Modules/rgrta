@@ -858,7 +858,7 @@ public class LogicRgrtaObsDAO implements LogicObsDAO
 		Message message = null;
 		try
 		{
-			message = pipeParser.parse(newMessageString);
+			message = pipeParser.parse(newMessageString); 
 		} catch (Exception e)
 		{
 			ATDError error = new ATDError("Error", "Hl7 Parsing",
@@ -933,12 +933,11 @@ public class LogicRgrtaObsDAO implements LogicObsDAO
 				if (obs == null)
 				{
 					obs = new HashSet<Obs>();
-					obsByConcept.put(currConceptName, obs);
+					obsByConcept.put(currConceptName, obs);  
 				}
 				obs.add(currObs);
-				System.out.print("this is a test line");
 			}
-			System.out.print("after obs loaded");
+			
 		} catch (Exception e)
 		{
 			this.log.error("Error processing MRF dump obs.");

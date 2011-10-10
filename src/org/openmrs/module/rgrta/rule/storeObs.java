@@ -87,8 +87,9 @@ public class storeObs implements Rule
 			formInstance = (FormInstance) parameters.get("formInstance");
 
 			conceptName = (String) parameters.get("param1");
-
+			log.error(" store obs concept name = " + conceptName);
 			ruleId = (Integer) parameters.get("ruleId");
+			log.error(" store obs rule id = " + ruleId);
 			locationTagId = (Integer) parameters.get("locationTagId");
 
 			if (conceptName == null)
@@ -112,7 +113,7 @@ public class storeObs implements Rule
 		
 		if(formInstance != null){
 			formId = formInstance.getFormId();
-		}
+ 		}
 
 		Util.saveObs(patient, currConcept, encounterId, value, formInstance,
 				ruleId,locationTagId);

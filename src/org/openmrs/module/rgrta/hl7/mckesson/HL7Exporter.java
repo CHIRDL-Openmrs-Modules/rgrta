@@ -15,10 +15,12 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -40,7 +42,6 @@ import org.openmrs.LocationTag;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
-import org.openmrs.PatientIdentifierType;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
@@ -98,6 +99,7 @@ public class HL7Exporter extends AbstractTask {
 	{
 
 		Context.openSession();
+		isInitialized = false;
 		
 		try {
 			if (Context.isAuthenticated() == false)
@@ -125,9 +127,12 @@ public class HL7Exporter extends AbstractTask {
 				socketReadTimeout = 5; //seconds
 			}
 			
+		}catch (Exception e){
+			log.error("Exception intializing hl7 exporter", e);
 		}finally{
-			
+			isInitialized = true;
 			Context.closeSession();
+			log.error("init complete");
 		}
 
 	}
@@ -144,6 +149,7 @@ public class HL7Exporter extends AbstractTask {
 		ATDService atdService = Context.getService(ATDService.class);
 		EncounterService encounterService = Context.getService(EncounterService.class);
 		AdministrationService adminService = Context.getAdministrationService();
+		LocationService locService = Context.getLocationService();
 		socketHandler = new HL7SocketHandler();
 		
 		String conceptCategory = "";
@@ -161,7 +167,12 @@ public class HL7Exporter extends AbstractTask {
 			//get list of pending exports
 			List <RgrtaHL7Export> exportList = RgrtaService.getPendingHL7Exports();
 			Iterator <RgrtaHL7Export> it = exportList.iterator();
-		
+		    if (exportList == null){
+		    	log.error("Export list size is null.");
+		    	
+		    } else {
+		    	log.error(" HL7Exporter has a list size is " + exportList.size() );
+		    }
 			while (it.hasNext()){
 				
 				
@@ -173,37 +184,19 @@ public class HL7Exporter extends AbstractTask {
 				//Get location of hl7 configuration file from location_tag_attribute_value
 				Integer encId = export.getEncounterId();
 				Integer hl7ExportQueueId = export.getQueueId();
-				
-				Integer formId = getFormIdByExportQueueId(hl7ExportQueueId);
-				
-				
-				//Get the mapping files
-				/*String conceptMapFile = getRgrtaExportConceptMapByQueueId(hl7ExportQueueId);
-				if (conceptMapFile == null) {
-					export.setStatus(RgrtaService.getRgrtaExportStatusByName("concept_map_location_unknown"));
-					RgrtaService.saveRgrtaHL7Export(export);
-					continue;
-				}*/
-				
-				/*Document doc = getDocument(conceptMapFile);
-				if (doc == null) {
-					
-					export.setStatus(RgrtaService.getRgrtaExportStatusByName("XML_parsing_error"));
-					RgrtaService.saveRgrtaHL7Export(export);
-					continue;
-				}
-				*/
+				FormInstance formInstance = this.getFormInstanceByExportQueueId(hl7ExportQueueId);
 				
 				//Get the hl7 config file
 				String configFileName;
-				if (formId == null){
+				if (formInstance == null ){
 					
 					configFileName = IOUtil.formatDirectoryName(adminService
 							.getGlobalProperty("rgrta.defaultHl7ConfigFileLocation"));
 					
 				}else {
-					configFileName = getConfigFileLocation( formId);
+					configFileName = getConfigFileLocation( formInstance.getFormId());
 				}
+				
 				if (configFileName == null || configFileName.equalsIgnoreCase("") ) {
 					export.setStatus(RgrtaService.getRgrtaExportStatusByName("hl7_config_file_not_found"));
 					RgrtaService.saveRgrtaHL7Export(export);
@@ -220,10 +213,6 @@ public class HL7Exporter extends AbstractTask {
 					continue;
 				}
 				
-				
-				
-				int numberOfOBXSegments = 0;
-				boolean sendObs = false;
 			
 				Encounter openmrsEncounter = (Encounter) encounterService.getEncounter(encId);
 				
@@ -245,7 +234,7 @@ public class HL7Exporter extends AbstractTask {
 				constructor.setAssignAuthority(identifier);
 				
 			
-				if (!addOBXForTiff(constructor, openmrsEncounter , formId, null, 
+				if (!addOBXForTiff(constructor, openmrsEncounter , formInstance.getFormId(), null, 
 							hl7Properties)){
 						export.setStatus(RgrtaService.getRgrtaExportStatusByName("Image_not_found"));
 						RgrtaService.saveRgrtaHL7Export(export);
@@ -256,26 +245,36 @@ public class HL7Exporter extends AbstractTask {
 				String message = constructor.getMessage();
 				export.setStatus(RgrtaService.getRgrtaExportStatusByName("hl7_sent"));
 				export.setDateProcessed(new Date());
-					
+				
+				
+				LocationTag  locTag = locService.getLocationTagByName("Default Location Tag");
+				Integer locTagId = locTag.getLocationTagId();
+				
+				
+				Date ackDate = null;
 				if (message != null && !message.equals("")){
-					Date ackDate = sendMessage(message, openmrsEncounter, socketHandler);
+					ackDate = sendMessage(message, openmrsEncounter, socketHandler);
 					if (ackDate != null) { 
 						export.setStatus(RgrtaService.getRgrtaExportStatusByName("ACK_received"));
 						export.setAckDate(ackDate);
+						ConceptService conceptService = Context.getConceptService();
+						Concept concept = conceptService.getConcept("atd_sent_to_provider");
+						Util.saveObs(patient, concept, encId, formInstance.toString(), formInstance, null, locTagId);
 						
 					}	else {
 						export.setStatus(RgrtaService.getRgrtaExportStatusByName("ACK_not_received"));
 					}
 					saveMessageFile(message,encId, ackDate);
 				}
-				 
+				
+		
 				RgrtaService.saveRgrtaHL7Export(export);
 				
 			}
 			
 	    
 		} catch (IOException e ){
-			log.error("Error opening socket:" + e.getMessage());
+			log.error("Error exporting message " + e);
 			
 		}catch (Exception e)
 		
@@ -639,24 +638,51 @@ public class HL7Exporter extends AbstractTask {
 					+ "- second try. Encounter_id = " + enc.getEncounterId());
 			}
 		}
+		
+		
 		return ackDate;
 	}
 	
-	private Integer getFormIdByExportQueueId(Integer queueId){
-		Integer formId = null;
+	private String getFormInstanceIdByExportQueueId(Integer queueId){
 		RgrtaService RgrtaService = Context.getService(RgrtaService.class);
 		RgrtaHL7ExportMap exportmap =  RgrtaService.getRgrtaExportMapByQueueId(queueId);
 		if (exportmap == null){
 			return null;
 		}
-		
-		String formIdString = exportmap.getValue();
+		return exportmap.getValue();
+	
+	}
+	
+	
+	
+	private Integer getFormIdByExportQueueId(Integer queueId){
+		String formInstanceIdString = getFormInstanceIdByExportQueueId(queueId);
+		Integer formId = null;
+		String[] segments = formInstanceIdString.split("_");
+		if (segments == null){
+			return null;
+		}
+		String formIdString = segments[1];
 		if (formIdString == null){
 			return null;
 		}
+		
 		formId = Integer.valueOf(formIdString);
 		
 		return formId;
+	}
+	
+	private FormInstance getFormInstanceByExportQueueId(Integer queueId){
+		String formInstanceIdString = getFormInstanceIdByExportQueueId(queueId);
+		Integer formId = null;
+		String[] segments = formInstanceIdString.split("_");
+		if (segments == null){
+			return null;
+		}
+		FormInstance formInstance = new FormInstance(Integer.valueOf(segments[0]), 
+				Integer.valueOf(segments[1]), Integer.valueOf(segments[2]));
+		
+		return formInstance;
 	}
 	
 	private String getConfigFileLocation( Integer formId){

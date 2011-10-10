@@ -103,9 +103,15 @@ public class consumeOnePart implements Rule
 				.getLogicDataSource("xml"), formIdCriteria);
 		
 		ConceptService conceptService = Context.getConceptService();
+		if ( ruleResult != null){
+			System.out.println( conceptName + " rule result is " + ruleResult.toString());
+		}
 		
-		if(ruleResult != null&&ruleResult.toString()!=null&&
+		if(ruleResult != null&&ruleResult.toString()!=null &&
+				!ruleResult.toString().trim().equalsIgnoreCase("null") &&
 				ruleResult.toString().length()>0)
+		
+		
 		{
 			Util.saveObs(patient, conceptService.getConceptByName(conceptName),
 					encounterId, ruleResult.toString(),formInstance,

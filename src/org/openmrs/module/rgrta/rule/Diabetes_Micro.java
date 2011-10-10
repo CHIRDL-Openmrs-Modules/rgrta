@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - Diabetes_Micro.mlm on Fri Jan 14 14:07:53 EST 2011
+ Translated from - Diabetes_Micro.mlm on Wed May 04 09:51:23 EDT 2011
 
  Title:  Diabetes_Micro
  Filename:  Diabetes_Micro
@@ -154,7 +154,7 @@ public class Diabetes_Micro implements Rule, DssRule{
 
 	/*** @see org.openmrs.module.dss.DssRule#getLogic()*/
 	public String getLogic(){
-		return "If call call call call call call call call call call call call call call conclude endif";
+		return "If call call call call call call call call call call if || if || if || if || call call call call conclude endif";
 	}
 
 	/*** @see org.openmrs.module.dss.DssRule#getAction()*/
@@ -244,143 +244,143 @@ return false;
 
 			Result micro_1=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein 12H Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein 12H Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_1",micro_1);
 			Result micro_2=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Alb/Creat 24H Ur Mass Rto").within(Duration.years(-1)).last());
+				new LogicCriteria("Alb/Creat 24H Ur Mass Rto").within(Duration.years(-2)).last());
 			resultLookup.put("micro_2",micro_2);
 			Result micro_3=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein/creat 24H Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein/creat 24H Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_3",micro_3);
 			Result micro_4=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Albumin/Min Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Albumin/Min Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_4",micro_4);
 			Result micro_5=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin 24H Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin 24H Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_5",micro_5);
 			Result micro_6=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin R-Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin R-Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_6",micro_6);
 			Result micro_7=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_7",micro_7);
 			Result micro_8=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_8",micro_8);
 			Result micro_9=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin Ur Qn mg/dL").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin Ur Qn mg/dL").within(Duration.years(-2)).last());
 			resultLookup.put("micro_9",micro_9);
 			Result micro_10=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin/Creat 24H Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin/Creat 24H Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_10",micro_10);
 			Result micro_11=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin/Creat Ur mcg/mg Cr").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin/Creat Ur mcg/mg Cr").within(Duration.years(-2)).last());
 			resultLookup.put("micro_11",micro_11);
 			Result micro_12=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin/Creat Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin/Creat Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_12",micro_12);
 			Result micro_13=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Albumin Ur QL").within(Duration.years(-1)).last());
+				new LogicCriteria("Albumin Ur QL").within(Duration.years(-2)).last());
 			resultLookup.put("micro_13",micro_13);
 			Result micro_14=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Albumin R-Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Albumin R-Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_14",micro_14);
 			Result micro_15=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Albumin Ur Qn (POC)").within(Duration.years(-1)).last());
+				new LogicCriteria("Albumin Ur Qn (POC)").within(Duration.years(-2)).last());
 			resultLookup.put("micro_15",micro_15);
 			Result micro_16=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Albumin 24H Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Albumin 24H Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_16",micro_16);
 			Result micro_17=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein 24H Cnc'").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein 24H Cnc'").within(Duration.years(-2)).last());
 			resultLookup.put("micro_17",micro_17);
 			Result micro_18=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein Timed Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein Timed Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_18",micro_18);
 			Result micro_19=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein R-Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein R-Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_19",micro_19);
 			Result micro_20=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein-Lcf Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein-Lcf Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_20",micro_20);
 			Result micro_21=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein-Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein-Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_21",micro_21);
 			Result micro_22=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein (Ur Elp)").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein (Ur Elp)").within(Duration.years(-2)).last());
 			resultLookup.put("micro_22",micro_22);
 			Result micro_23=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein 24H Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein 24H Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_23",micro_23);
 			Result micro_24=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein 24H Ur Qn Elp").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein 24H Ur Qn Elp").within(Duration.years(-2)).last());
 			resultLookup.put("micro_24",micro_24);
 			Result micro_25=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein TV Ur Qn").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein TV Ur Qn").within(Duration.years(-2)).last());
 			resultLookup.put("micro_25",micro_25);
 			Result micro_26=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein R-Ur Qn mg/gm Cr").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein R-Ur Qn mg/gm Cr").within(Duration.years(-2)).last());
 			resultLookup.put("micro_26",micro_26);
 			Result micro_27=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Protein/Creat Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Protein/Creat Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_27",micro_27);
 			Result micro_28=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin 24H Ur Cnc").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin 24H Ur Cnc").within(Duration.years(-2)).last());
 			resultLookup.put("micro_28",micro_28);
 			Result micro_29=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Albumin/Creat Rnd Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Albumin/Creat Rnd Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_29",micro_29);
 			Result micro_30=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Albumin/Creat Ur").within(Duration.years(-1)).last());
+				new LogicCriteria("Albumin/Creat Ur").within(Duration.years(-2)).last());
 			resultLookup.put("micro_30",micro_30);
 			Result micro_31=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Albumin/Creat Ur Ratio (POC)").within(Duration.years(-1)).last());
+				new LogicCriteria("Albumin/Creat Ur Ratio (POC)").within(Duration.years(-2)).last());
 			resultLookup.put("micro_31",micro_31);
 			Result micro_32=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin Ur Excretion Rate").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin Ur Excretion Rate").within(Duration.years(-2)).last());
 			resultLookup.put("micro_32",micro_32);
 			Result micro_33=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Microalbumin Ur Panel").within(Duration.years(-1)).last());
+				new LogicCriteria("Microalbumin Ur Panel").within(Duration.years(-2)).last());
 			resultLookup.put("micro_33",micro_33);
 			Result micro_34=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("R-UR ALBUMIN/CREAT").within(Duration.years(-1)).last());
+				new LogicCriteria("R-UR ALBUMIN/CREAT").within(Duration.years(-2)).last());
 			resultLookup.put("micro_34",micro_34);
 			Result micro_35=context.read(
 				patient,context.getLogicDataSource("RMRS"),
-				new LogicCriteria("Hosp Procedures").within(Duration.years(-1)));
+				new LogicCriteria("Hosp Procedures").within(Duration.years(-2)));
 			resultLookup.put("micro_35",micro_35);}
 
 			if(evaluate_logic(parameters)){
@@ -4296,6 +4296,108 @@ return false;
 				}
 				Result element1 = logicService.eval(patient, "getResultElement",parameters);
 				resultLookup.put("element1",element1);
+				varLen = "1".length();
+				value=userVarMap.get("1");
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				// It must be a result value or date
+				else if("1".endsWith("_value"))
+				{
+					variable = "1".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("1".endsWith("_date"))
+				{
+					variable = "1".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("1".endsWith("_object"))
+				{
+					variable = "1".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("1") != null){
+						value = resultLookup.get("1").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param1",value);
+				}
+				else
+				{
+					parameters.put("param1","1");
+				}
+				varLen = "finalResults_object".length();
+				value=userVarMap.get("finalResults_object");
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				// It must be a result value or date
+				else if("finalResults_object".endsWith("_value"))
+				{
+					variable = "finalResults_object".substring(0, varLen-6); // -6 for _value
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).toString();
+					}
+				}
+				else if("finalResults_object".endsWith("_date"))
+				{
+					variable = "finalResults_object".substring(0, varLen-5); // -5 for _date
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable).getResultDate().toString();
+					}
+				}
+				else if("finalResults_object".endsWith("_object"))
+				{
+					variable = "finalResults_object".substring(0, varLen-7); // -5 for _object
+					if (resultLookup.get(variable) != null){
+						value = resultLookup.get(variable);
+					}
+				}
+				else
+				{
+					if (resultLookup.get("finalResults_object") != null){
+						value = resultLookup.get("finalResults_object").toString();
+					}
+				}
+				if(value != null){
+					parameters.put("param2",value);
+				}
+				else
+				{
+					parameters.put("param2","finalResults_object");
+				}
+				Result element2 = logicService.eval(patient, "getResultElement",parameters);
+				resultLookup.put("element2",element2);
+		if((element1.isNull())){
+			//preprocess any || operator ;
+			String val = doAction("");
+			userVarMap.put("element1_date",  val);
+		}
+		if((element1.isNull())){
+			//preprocess any || operator ;
+			String val = doAction("");
+			userVarMap.put("element1_value",  val);
+		}
+		if((element2.isNull())){
+			//preprocess any || operator ;
+			String val = doAction("");
+			userVarMap.put("element2_date",  val);
+		}
+		if((element2.isNull())){
+			//preprocess any || operator ;
+			String val = doAction("");
+			userVarMap.put("element2_value",  val);
+		}
 				varLen = "element1_object".length();
 				value=userVarMap.get("element1_object");
 				if(value != null){
@@ -4380,88 +4482,6 @@ return false;
 				}
 				Result finalResultUnits1 = logicService.eval(patient, "getConceptUnits",parameters);
 				resultLookup.put("finalResultUnits1",finalResultUnits1);
-				varLen = "1".length();
-				value=userVarMap.get("1");
-				if(value != null){
-					parameters.put("param1",value);
-				}
-				// It must be a result value or date
-				else if("1".endsWith("_value"))
-				{
-					variable = "1".substring(0, varLen-6); // -6 for _value
-					if (resultLookup.get(variable) != null){
-						value = resultLookup.get(variable).toString();
-					}
-				}
-				else if("1".endsWith("_date"))
-				{
-					variable = "1".substring(0, varLen-5); // -5 for _date
-					if (resultLookup.get(variable) != null){
-						value = resultLookup.get(variable).getResultDate().toString();
-					}
-				}
-				else if("1".endsWith("_object"))
-				{
-					variable = "1".substring(0, varLen-7); // -5 for _object
-					if (resultLookup.get(variable) != null){
-						value = resultLookup.get(variable);
-					}
-				}
-				else
-				{
-					if (resultLookup.get("1") != null){
-						value = resultLookup.get("1").toString();
-					}
-				}
-				if(value != null){
-					parameters.put("param1",value);
-				}
-				else
-				{
-					parameters.put("param1","1");
-				}
-				varLen = "finalResults_object".length();
-				value=userVarMap.get("finalResults_object");
-				if(value != null){
-					parameters.put("param2",value);
-				}
-				// It must be a result value or date
-				else if("finalResults_object".endsWith("_value"))
-				{
-					variable = "finalResults_object".substring(0, varLen-6); // -6 for _value
-					if (resultLookup.get(variable) != null){
-						value = resultLookup.get(variable).toString();
-					}
-				}
-				else if("finalResults_object".endsWith("_date"))
-				{
-					variable = "finalResults_object".substring(0, varLen-5); // -5 for _date
-					if (resultLookup.get(variable) != null){
-						value = resultLookup.get(variable).getResultDate().toString();
-					}
-				}
-				else if("finalResults_object".endsWith("_object"))
-				{
-					variable = "finalResults_object".substring(0, varLen-7); // -5 for _object
-					if (resultLookup.get(variable) != null){
-						value = resultLookup.get(variable);
-					}
-				}
-				else
-				{
-					if (resultLookup.get("finalResults_object") != null){
-						value = resultLookup.get("finalResults_object").toString();
-					}
-				}
-				if(value != null){
-					parameters.put("param2",value);
-				}
-				else
-				{
-					parameters.put("param2","finalResults_object");
-				}
-				Result element2 = logicService.eval(patient, "getResultElement",parameters);
-				resultLookup.put("element2",element2);
 				varLen = "element2_object".length();
 				value=userVarMap.get("element2_object");
 				if(value != null){
@@ -4552,14 +4572,14 @@ return false;
 
 	public void initAction() {
 		this.actions = new ArrayList<String>();
-		actions.add("|| element1_date ||@microResultDate1");
 		actions.add("|| element1_value ||@microResultValue1");
 		actions.add("|| finalResultConceptName1_value ||@microConceptName1");
 		actions.add("|| finalResultUnits1_value ||@microResultUnit1");
-		actions.add("|| element2_date ||@microResultDate2");
 		actions.add("|| element2_value ||@microResultValue2");
 		actions.add("|| finalResultConceptName2_value ||@microConceptName2");
 		actions.add("|| finalResultUnits2_value ||@microResultUnit2");
+		actions.add("|| element1_date ||@microResultDate1");
+		actions.add("|| element2_date ||@microResultDate2");
 	}
 
 private String substituteString(String variable,String outStr){
