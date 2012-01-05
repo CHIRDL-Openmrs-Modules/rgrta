@@ -94,6 +94,7 @@ public class HL7ExportProcessor /* implements Runnable */{
 	private Integer socketReadTimeout = null;
 	private String resendOption = null;
 	private HL7SocketHandler socketHandler;
+	private String resendNoAck;
 	
 	// processor per JVM
 	
@@ -112,6 +113,7 @@ public class HL7ExportProcessor /* implements Runnable */{
 		this.port = port;
 		this.socketReadTimeout = socketReadTimeout;
 		this.resendOption = resendOption;
+		
 		
 	}
 	
@@ -281,7 +283,7 @@ public class HL7ExportProcessor /* implements Runnable */{
 		
 		RgrtaService rgrtaService = Context.getService(RgrtaService.class);
 		boolean entryProcessed = false;
-		RgrtaHL7Export rgrtaHl7Export = rgrtaService.getNextPendingHL7Export(resendOption);
+		RgrtaHL7Export rgrtaHl7Export = rgrtaService.getNextPendingHL7Export(resendOption, resendNoAck);
 		if (rgrtaHl7Export != null) {
 			exportHL7(rgrtaHl7Export);
 			entryProcessed = true;

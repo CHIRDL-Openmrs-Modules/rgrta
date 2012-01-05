@@ -652,10 +652,11 @@ public class HibernateRgrtaDAO implements RgrtaDAO
 		return exports;
 	}
 	
-	public RgrtaHL7Export getNextPendingHL7Export(String resendImagesNotFound){
+	public RgrtaHL7Export getNextPendingHL7Export(String resendImagesNotFound, String resendNoAck){
 		
 		try {
 			String resend = "";
+			String resendNoAckExtension = "";
 			if (resendImagesNotFound != null && (resendImagesNotFound.equalsIgnoreCase("yes")||
 					resendImagesNotFound.equalsIgnoreCase("true")))
 			{
@@ -665,10 +666,21 @@ public class HibernateRgrtaDAO implements RgrtaDAO
 				}
 			} 
 			
+			if (resendNoAck != null && (resendNoAck.equalsIgnoreCase("yes")||
+					resendNoAck.equalsIgnoreCase("true")))
+			{
+				RgrtaHL7ExportStatus status = getRgrtaExportStatusByName("ACK_not_received");
+				RgrtaHL7ExportStatus statusSocket = getRgrtaExportStatusByName("open_socket_failed");
+				if (status != null ){
+					resendNoAckExtension = " or status = " + status.getHl7ExportStatusId()
+					 +  " or status = " + statusSocket.getHl7ExportStatusId();
+				}
+			} 
+			
 			SQLQuery qry = this.sessionFactory.getCurrentSession()
 				.createSQLQuery("select * from Rgrta_hl7_export " +
 			" where voided = 0 and ((status = 1 and date_processed is null) " 
-						+ resend + " ) ");
+						+ resend + resendNoAckExtension + " ) order by date_inserted ");
 
 			
 			qry.addEntity(RgrtaHL7Export.class);

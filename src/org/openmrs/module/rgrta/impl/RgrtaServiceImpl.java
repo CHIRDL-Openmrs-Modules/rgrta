@@ -545,6 +545,7 @@ public class RgrtaServiceImpl implements RgrtaService
 		if (languageResponse != null&&formName.equals("PSF")) {
 			ObsService obsService = Context.getObsService();
 			Obs obs = new Obs();
+			
 			String conceptName = "preferred_language";
 			ConceptService conceptService = Context.getConceptService();
 			Concept currConcept = conceptService.getConceptByName(conceptName);
@@ -1041,8 +1042,8 @@ public class RgrtaServiceImpl implements RgrtaService
 			
 		}
 		
-		public RgrtaHL7Export getNextPendingHL7Export(String resend) {
-			return getRgrtaDAO().getNextPendingHL7Export(resend);
+		public RgrtaHL7Export getNextPendingHL7Export(String resend, String resendNoAck) {
+			return getRgrtaDAO().getNextPendingHL7Export(resend, resendNoAck);
 			
 		}
 

@@ -104,9 +104,9 @@ public class Rescan implements ProcessStateAction
 			}
 		}
 
-		RgrtaStateActionHandler.consume(sessionId, formInstance, patient,
-				 parameters,
-				null,locationTagId);
+		//RgrtaStateActionHandler.consume(sessionId, formInstance, patient,
+		//		 parameters,
+		//		null,locationTagId);
 		StateManager.endState(patientState);
 		
 		//start a new session if this was a PSF_RESCAN

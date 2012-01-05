@@ -104,13 +104,13 @@ public class HL7EncounterHandler25 extends
 				 if (msh != null){
 					 timeStamp = msh.getDateTimeOfMessage();
 			 	}
-			 } else {
-				 logger.error("A valid encounter date time stamp could not be " +
-							"determined from PV1 or MSH segments and for the purpose of rgrta" +
-							"the current date time will be used.");
+				 if (timeStamp == null || timeStamp.getTime()== null || timeStamp.getTime().getValue() == null)  {
+					 logger.error("A valid encounter date time stamp could not be " +
+								"determined from PV1 or MSH segments and for the purpose of rgrta" +
+								"the current date time will be used.");
+				 }
 			 }
-			
-			
+			 
 			if (timeStamp != null && timeStamp.getTime()!= null) { 
 				datetime = TranslateDate(timeStamp);
 			}else {

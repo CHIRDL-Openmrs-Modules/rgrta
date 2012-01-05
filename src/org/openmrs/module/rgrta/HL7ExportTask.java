@@ -86,10 +86,12 @@ public class HL7ExportTask extends AbstractTask {
 	private String host;
 	private Integer port;
 	private String resendOption;
+	private String resendNoAck;
 	private Integer socketReadTimeout;
 	private HL7SocketHandler socketHandler;
 	private static Boolean isRunning = false;
 	private boolean shutdown = false;
+	private Integer interval;
 	
 	/**
 	 * Default Constructor (Uses SchedulerConstants.username and SchedulerConstants.password
@@ -112,8 +114,10 @@ public class HL7ExportTask extends AbstractTask {
 			this.taskConfig = config;
 			//port to export
 			String portName = this.taskConfig.getProperty("port");
+			String intervalString = this.taskConfig.getProperty("interval");
 			host  = this.taskConfig.getProperty("host");
 			resendOption  = this.taskConfig.getProperty("resendOption");
+			resendNoAck  = this.taskConfig.getProperty("resendNoAck");
 			String socketReadTimeoutString  = this.taskConfig.getProperty("socketReadTimeout");
 			
 			if (host == null){
@@ -126,6 +130,18 @@ public class HL7ExportTask extends AbstractTask {
 			{
 				port = 0;
 			}
+			
+			if (intervalString != null ){
+				try {
+					interval = Integer.valueOf(intervalString);
+				} catch (NumberFormatException e) {
+					log.error("Interval property cannot be converted to integer value." );
+					interval = 3000;
+				}
+			} else
+			{
+				interval = 0;
+			}
 			if (socketReadTimeoutString != null){
 				socketReadTimeout = Integer.parseInt(socketReadTimeoutString);
 			} else {
@@ -135,6 +151,7 @@ public class HL7ExportTask extends AbstractTask {
 			
 			
 		}finally{
+			
 			isInitialized = true;
 			Context.closeSession();
 		}
@@ -167,7 +184,7 @@ public class HL7ExportTask extends AbstractTask {
 	 * 
 	 * @param hl7InQueue queue entry to be processed
 	 */
-	public void exportHL7(RgrtaHL7Export rgrtaHl7Export) {
+	public boolean exportHL7(RgrtaHL7Export rgrtaHl7Export) {
 		
 		
 		ATDService atdService = Context.getService(ATDService.class);
@@ -181,7 +198,13 @@ public class HL7ExportTask extends AbstractTask {
 		{
 		
 			
-			socketHandler.openSocket(host, port);
+			if (!socketHandler.openSocket(host, port)){
+				log.error("Unable to open socket for host: " + host + " port: " + port );
+				rgrtaHl7Export.setStatus(RgrtaService.getRgrtaExportStatusByName("open_socket_failed"));
+				rgrtaHl7Export.setDateProcessed(new Date());
+				RgrtaService.saveRgrtaHL7Export(rgrtaHl7Export);
+				return false;
+			}
 			//add socketReadTimeout to scheduler
 			
 			//Get location of hl7 configuration file from location_tag_attribute_value
@@ -210,7 +233,7 @@ public class HL7ExportTask extends AbstractTask {
 						null ,
 						 new Date(), sessionId);
 				atdService.saveError(ce);
-				return;
+				return true;
 			}
 			
 			
@@ -226,7 +249,7 @@ public class HL7ExportTask extends AbstractTask {
 						null ,
 						 new Date(), sessionId);
 				atdService.saveError(ce);
-				return;
+				return true;
 			}
 			
 		
@@ -251,7 +274,7 @@ public class HL7ExportTask extends AbstractTask {
 						null ,
 						 new Date(), sessionId);
 				atdService.saveError(ce);
-				return;
+				return true;
 			}
 			PatientIdentifier identifier = patient.getPatientIdentifier();
 			String npi = null;
@@ -280,7 +303,7 @@ public class HL7ExportTask extends AbstractTask {
 				Concept concept = conceptService.getConcept("atd_sent_to_provider");
 				org.openmrs.module.rgrta.util.Util.saveObs(patient, concept, encId, "missing_npi" , formInstance, null, locTagId);
 				log.error("Provider NPI is null for form instance: " + formInstance );
-				return;
+				return true;
 			}
 			constructor.setAssignAuthority(identifier);
 			
@@ -298,7 +321,7 @@ public class HL7ExportTask extends AbstractTask {
 					//org.openmrs.module.rgrta.util.Util.saveObs(patient, concept, encId, "Image_not_found" , formInstance, null, locTagId);
 					
 					//atdService.saveError(ce);
-					return;
+					return true;
 			}
 				
 			//Send the message
@@ -321,6 +344,7 @@ public class HL7ExportTask extends AbstractTask {
 					
 				}	else {
 					rgrtaHl7Export.setStatus(RgrtaService.getRgrtaExportStatusByName("ACK_not_received"));
+					return false;
 				}
 				saveMessageFile(message,encId, ackDate);
 			}
@@ -346,6 +370,8 @@ public class HL7ExportTask extends AbstractTask {
 			socketHandler.closeSocket();
 			Context.closeSession();
 		}
+		
+		return true;
 
 	}	
 	
@@ -356,7 +382,7 @@ public class HL7ExportTask extends AbstractTask {
 	 * 
 	 * @return true if a queue entry was processed, false if queue was empty
 	 */
-	public boolean processNextHL7InQueue(String resendOption) {
+	public boolean processNextHL7InQueue(String resendOption, String resendNoAck) {
 		Context.openSession();
 		boolean entryProcessed;
 		RgrtaHL7Export rgrtaHl7Export = null;
@@ -365,10 +391,9 @@ public class HL7ExportTask extends AbstractTask {
 				authenticate();
 			RgrtaService rgrtaService = Context.getService(RgrtaService.class);
 			entryProcessed = false;
-			rgrtaHl7Export = rgrtaService.getNextPendingHL7Export(resendOption);
+			rgrtaHl7Export = rgrtaService.getNextPendingHL7Export(resendOption, resendNoAck);
 			if (rgrtaHl7Export != null) {
-				exportHL7(rgrtaHl7Export);
-				entryProcessed = true;
+				entryProcessed = exportHL7(rgrtaHl7Export);;
 			}
 		} finally {
 			Context.closeSession();
@@ -390,8 +415,14 @@ public class HL7ExportTask extends AbstractTask {
 		}
 		try {
 			log.debug("Start processing hl7 in queue");
-			while (processNextHL7InQueue(this.resendOption ) && shutdown == false) {
+			while (processNextHL7InQueue(this.resendOption, this.resendNoAck ) && shutdown == false) {
 				// loop until queue is empty
+				try {
+					Thread.sleep(interval);//check every 5 seconds
+				}
+				catch (InterruptedException e) {
+					log.error("Error generated", e);
+				}
 			}
 			log.debug("Done processing hl7 in queue");
 		}
@@ -734,6 +765,11 @@ private String getConfigFileLocation( Integer formId){
 			}
 			
 		} catch (Exception e){
+			try {
+				Thread.sleep(interval);
+			} catch (InterruptedException e2) {
+				log.error("Error sleeping before resending hl7 message");
+			}
 			log.error("Error exporting message host:" + host + "; port:" + port 
 					+ "- first try. Encounter_id = " + enc.getEncounterId());
 			try {

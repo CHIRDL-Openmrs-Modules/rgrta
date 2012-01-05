@@ -112,7 +112,7 @@ public interface RgrtaDAO {
 
 	public List<RgrtaHL7Export> getPendingHL7Exports();
 	
-	public RgrtaHL7Export getNextPendingHL7Export(String optionalResend);
+	public RgrtaHL7Export getNextPendingHL7Export(String optionalResend, String resendNoAck);
 	
 	public void saveRgrtaHL7Export(RgrtaHL7Export export);
 	

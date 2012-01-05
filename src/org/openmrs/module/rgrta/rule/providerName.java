@@ -10,7 +10,6 @@ import org.openmrs.api.EncounterService;
 import org.openmrs.api.context.Context;
 import org.openmrs.logic.LogicContext;
 import org.openmrs.logic.LogicException;
-import org.openmrs.logic.LogicService;
 import org.openmrs.logic.Rule;
 import org.openmrs.logic.result.Result;
 import org.openmrs.logic.result.Result.Datatype;
@@ -26,7 +25,6 @@ import org.openmrs.module.chirdlutil.util.Util;
 public class providerName implements Rule
 {
 
-	private LogicService logicService = Context.getLogicService();
 
 	public Result eval(LogicContext context, Patient patient,
 			Map<String, Object> parameters) throws LogicException

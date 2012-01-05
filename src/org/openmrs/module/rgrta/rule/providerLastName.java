@@ -26,7 +26,6 @@ import org.openmrs.module.chirdlutil.util.Util;
 public class providerLastName implements Rule
 {
 
-	private LogicService logicService = Context.getLogicService();
 
 	public Result eval(LogicContext context, Patient patient,
 			Map<String, Object> parameters) throws LogicException

@@ -25,8 +25,6 @@ import org.openmrs.logic.rule.RuleParameterInfo;
 public class getResultElement implements Rule
 {
 
-	private LogicService logicService = Context.getLogicService();
-
 	/**
 	 * @see org.openmrs.logic.rule.Rule#eval(org.openmrs.Patient,
 	 *      org.openmrs.logic.LogicCriteria)
