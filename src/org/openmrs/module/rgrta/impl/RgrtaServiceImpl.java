@@ -171,33 +171,47 @@ public class RgrtaServiceImpl implements RgrtaService
 			
 			
 			//Compare form MRNs to patient medical record number
-			if (!Util.extractIntFromString(patientMedRecNumber).equalsIgnoreCase(
-					Util.extractIntFromString(xmlMedRecNumber)))
-			{
-				//Compare patient MRN to MRN bar code from back of form.
-				if (xmlMedRecNumber2 == null || !Util.extractIntFromString(patientMedRecNumber)
-							.equalsIgnoreCase( Util.extractIntFromString(xmlMedRecNumber2))){
-					ATDError noMatch = new ATDError("Fatal", "MRN Validity", "Patient MRN" 
-							+ " does not match any form MRN bar codes (front or back) " 
-							,"\r\n Form instance id: "  + formInstanceId 
-							+ "\r\n Patient MRN: " + patientMedRecNumber
-							+ " \r\n MRN barcode front: " + xmlMedRecNumber + "\r\n MRN barcode back: "
-							+ xmlMedRecNumber2, new Date(), sessionId);
-					atdService.saveError(noMatch);
-				    return;
+			AdministrationService adminService = Context.getAdministrationService();
+			String consumeMRN = null;
+			consumeMRN = adminService
+					.getGlobalProperty("rgrta.consumeMRN");
+			
+			if ((consumeMRN != null )
+				&& (consumeMRN.trim().equalsIgnoreCase("y") ||
+					consumeMRN.trim().equalsIgnoreCase("yes") ||
+					consumeMRN.trim().equalsIgnoreCase("1") ||
+					consumeMRN.trim().equalsIgnoreCase("true"))
+				){
 					
-				} 
-				//Patient MRN does not match MRN bar code on front of form, but does match 
-				// MRN bar code on back of form.
-				ATDError warning = new ATDError("Warning", "MRN Validity", "Patient MRN matches" 
-							+ " MRN bar code from back of form only. " 
-							,"Form instance id: "  + formInstanceId 
-							+ "\r\n Patient MRN: " + patientMedRecNumber
-							+ " \r\n MRN barcode front: " + xmlMedRecNumber + "\r\n MRN barcode back: " 
-							+ xmlMedRecNumber2, new Date(), sessionId);
-				atdService.saveError(warning);
-				
-				
+				System.out.println("Performing MRN check");
+				if (!Util.extractIntFromString(patientMedRecNumber).equalsIgnoreCase(
+						Util.extractIntFromString(xmlMedRecNumber)))
+				{
+					//Compare patient MRN to MRN bar code from back of form.
+					if (xmlMedRecNumber2 == null || !Util.extractIntFromString(patientMedRecNumber)
+								.equalsIgnoreCase( Util.extractIntFromString(xmlMedRecNumber2))){
+						ATDError noMatch = new ATDError("Fatal", "MRN Validity", "Patient MRN" 
+								+ " does not match any form MRN bar codes (front or back) " 
+								,"\r\n Form instance id: "  + formInstanceId 
+								+ "\r\n Patient MRN: " + patientMedRecNumber
+								+ " \r\n MRN barcode front: " + xmlMedRecNumber + "\r\n MRN barcode back: "
+								+ xmlMedRecNumber2, new Date(), sessionId);
+						atdService.saveError(noMatch);
+					    return;
+						
+					} 
+					//Patient MRN does not match MRN bar code on front of form, but does match 
+					// MRN bar code on back of form.
+					ATDError warning = new ATDError("Warning", "MRN Validity", "Patient MRN matches" 
+								+ " MRN bar code from back of form only. " 
+								,"Form instance id: "  + formInstanceId 
+								+ "\r\n Patient MRN: " + patientMedRecNumber
+								+ " \r\n MRN barcode front: " + xmlMedRecNumber + "\r\n MRN barcode back: " 
+								+ xmlMedRecNumber2, new Date(), sessionId);
+					atdService.saveError(warning);
+					
+					
+				}
 			}
 
 			startTime = System.currentTimeMillis();

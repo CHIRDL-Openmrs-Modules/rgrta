@@ -1,5 +1,5 @@
 /********************************************************************
- Translated from - Asthma_JIT.mlm on Tue Jan 04 13:25:23 EST 2011
+ Translated from - Asthma_JIT.mlm on Mon Feb 28 14:41:53 EST 2011
 
  Title:  Asthma_JIT
  Filename:  Asthma_JIT
@@ -243,7 +243,7 @@ return false;
 			resultLookup.put("mode",mode);		if((!mode.isNull()&&mode.toString().equalsIgnoreCase("PRODUCE"))){
 
 			Result asthma=context.read(
-				patient,context.getLogicDataSource("CHICA"),
+				patient,context.getLogicDataSource("RMRS"),
 				new LogicCriteria("ASTHMA_COHORT").last());
 			resultLookup.put("asthma",asthma);}
 

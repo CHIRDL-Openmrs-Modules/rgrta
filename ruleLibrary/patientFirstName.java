@@ -34,7 +34,6 @@ import org.openmrs.module.chirdlutil.util.Util;
 
 public class patientFirstName implements Rule
 {
-	private LogicService logicService = Context.getLogicService();
 
 	/**
 	 * *

@@ -76,13 +76,12 @@ public class getAllWithSameDate implements Rule
 			return Result.emptyResult();
 		}
 			
-		
-		
-    	Result results = null;
-    	int i = 3;
-		Object paramObj = parameters.get("param2");
-		while(paramObj != null){
-			paramObj = parameters.get("param"+i);
+		Result results = null;
+    	int i = 1;
+		Object paramObj = "";
+    	
+    	while(paramObj != null){
+    		paramObj = parameters.get("param"+i);
 			i++;
 			if(paramObj instanceof Result){
 				results = (Result) parameters.get("param"+i);
@@ -95,6 +94,7 @@ public class getAllWithSameDate implements Rule
 					if(result !=  null  ){
 						Date resultDate = result.getResultDate();
 						if ( resultDate != null && resultDate.equals(mostRecentResult.getResultDate())){
+							result.setValueText(String.valueOf(result.toNumber()));
 							sameDateResults.add(result);
 						}
 						
@@ -108,7 +108,7 @@ public class getAllWithSameDate implements Rule
 		if(sameDateResults.isEmpty()){
 		return new Result();
 		}
-		return sameDateResults;
+		return new Result(sameDateResults);
 	}
 }
 	

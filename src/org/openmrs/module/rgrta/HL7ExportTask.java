@@ -92,6 +92,9 @@ public class HL7ExportTask extends AbstractTask {
 	private static Boolean isRunning = false;
 	private boolean shutdown = false;
 	private Integer interval;
+	private String sendPing;
+	private boolean stop = false;
+	private Integer sleepAfterConnectError;
 	
 	/**
 	 * Default Constructor (Uses SchedulerConstants.username and SchedulerConstants.password
@@ -118,6 +121,8 @@ public class HL7ExportTask extends AbstractTask {
 			host  = this.taskConfig.getProperty("host");
 			resendOption  = this.taskConfig.getProperty("resendOption");
 			resendNoAck  = this.taskConfig.getProperty("resendNoAck");
+			sendPing  = this.taskConfig.getProperty("sendPing");
+			String  sleepAfterConnectErrorString  = this.taskConfig.getProperty("sleepAfterConnectError");
 			String socketReadTimeoutString  = this.taskConfig.getProperty("socketReadTimeout");
 			
 			if (host == null){
@@ -136,7 +141,7 @@ public class HL7ExportTask extends AbstractTask {
 					interval = Integer.valueOf(intervalString);
 				} catch (NumberFormatException e) {
 					log.error("Interval property cannot be converted to integer value." );
-					interval = 3000;
+					interval = 30000;
 				}
 			} else
 			{
@@ -148,7 +153,13 @@ public class HL7ExportTask extends AbstractTask {
 				socketReadTimeout = 5; //seconds
 			}
 			
+			if (sleepAfterConnectErrorString != null){
+				sleepAfterConnectError = Integer.parseInt(sleepAfterConnectErrorString);
+			} else {
+				sleepAfterConnectError = 600000; //seconds
+			}
 			
+			stop = false;
 			
 		}finally{
 			
@@ -200,15 +211,39 @@ public class HL7ExportTask extends AbstractTask {
 			
 			if (!socketHandler.openSocket(host, port)){
 				log.error("Unable to open socket for host: " + host + " port: " + port );
-				rgrtaHl7Export.setStatus(RgrtaService.getRgrtaExportStatusByName("open_socket_failed"));
-				rgrtaHl7Export.setDateProcessed(new Date());
-				RgrtaService.saveRgrtaHL7Export(rgrtaHl7Export);
+				ATDError error = new ATDError("Warning", "Hl7 Export", 
+						"Cannot connect to server for export."
+						,"",
+						 new Date(), null);
+				atdService.saveError(error);
+				
+					rgrtaHl7Export.setStatus(RgrtaService.getRgrtaExportStatusByName("open_socket_failed"));
+					rgrtaHl7Export.setDateProcessed(new Date());
+					RgrtaService.saveRgrtaHL7Export(rgrtaHl7Export);
+					socketHandler.closeSocket();
+					Thread.sleep(sleepAfterConnectError);
+
+				
 				return false;
 			}
 			//add socketReadTimeout to scheduler
 			
-			//Get location of hl7 configuration file from location_tag_attribute_value
 			Integer encId = rgrtaHl7Export.getEncounterId();
+			Encounter openmrsEncounter = (Encounter) encounterService.getEncounter(encId);
+			
+			//try pinging for ACK
+			if ( sendPing != null && (sendPing.equalsIgnoreCase("yes") || sendPing.equalsIgnoreCase("y")
+					|| sendPing.equalsIgnoreCase("1")) && ! sendPing(openmrsEncounter)){
+				log.error("Ping did not receive ACK : " + host + " port: " + port );
+				rgrtaHl7Export.setStatus(RgrtaService.getRgrtaExportStatusByName("ACK_not_received"));
+				rgrtaHl7Export.setDateProcessed(new Date());
+				RgrtaService.saveRgrtaHL7Export(rgrtaHl7Export);
+				return false;
+				
+			}
+			
+			//Get location of hl7 configuration file from location_tag_attribute_value
+			
 			Integer hl7ExportQueueId = rgrtaHl7Export.getQueueId();
 			FormInstance formInstance = this.getFormInstanceByExportQueueId(hl7ExportQueueId);
 			
@@ -253,8 +288,6 @@ public class HL7ExportTask extends AbstractTask {
 			}
 			
 		
-			Encounter openmrsEncounter = (Encounter) encounterService.getEncounter(encId);
-			
 			org.openmrs.module.rgrta.hl7.mckesson.HL7MessageConstructor constructor = 
 				new org.openmrs.module.rgrta.hl7.mckesson.HL7MessageConstructor(configFileName, null );
 			
@@ -344,6 +377,7 @@ public class HL7ExportTask extends AbstractTask {
 					
 				}	else {
 					rgrtaHl7Export.setStatus(RgrtaService.getRgrtaExportStatusByName("ACK_not_received"));
+					stop = true;
 					return false;
 				}
 				saveMessageFile(message,encId, ackDate);
@@ -415,7 +449,8 @@ public class HL7ExportTask extends AbstractTask {
 		}
 		try {
 			log.debug("Start processing hl7 in queue");
-			while (processNextHL7InQueue(this.resendOption, this.resendNoAck ) && shutdown == false) {
+			while ( processNextHL7InQueue(this.resendOption, this.resendNoAck ) 
+					&& !stop && shutdown == false) {
 				// loop until queue is empty
 				try {
 					Thread.sleep(interval);//check every 5 seconds
@@ -765,7 +800,10 @@ private String getConfigFileLocation( Integer formId){
 			}
 			
 		} catch (Exception e){
-			try {
+			log.error("Error exporting message host:" + host + "; port:" + port 
+					+ " Encounter_id = " + enc.getEncounterId());
+		}
+			/*try {
 				Thread.sleep(interval);
 			} catch (InterruptedException e2) {
 				log.error("Error sleeping before resending hl7 message");
@@ -782,14 +820,44 @@ private String getConfigFileLocation( Integer formId){
 								 + "- second try. Encounter_id = " + enc.getEncounterId());
 					 }
 				}
-			} catch (Exception e1) {
+			} *catch (Exception e1) {
 				log.error("Error exporting message host:" + host + "; port:" + port 
 					+ "- second try. Encounter_id = " + enc.getEncounterId());
 			}
-		}
+		}*/
 		
 		
 		return ackDate;
+	}
+	
+	private boolean sendPing(Encounter openmrsEncounter){
+		
+		
+		AdministrationService adminService = Context.getAdministrationService();
+		String configFileName = IOUtil.formatDirectoryName(adminService
+				.getGlobalProperty("rgrta.ping_config_file_location"));
+		
+		Properties hl7Properties = org.openmrs.module.rgrta.util.Util.getProps(configFileName);
+		
+		if (hl7Properties == null ){
+			return false;
+		}
+		
+		String message = hl7Properties.getProperty("messageText");
+		Date ackDate = null;
+		if (message == null || message.trim().equals("")){
+			return false;
+		}
+		
+		ackDate = sendMessage(message, openmrsEncounter, socketHandler);
+		if (ackDate == null){
+			log.error("HL7 export ping failed.");
+			return false;
+		}
+		log.error("HL7 export ping confirmed. " + message.substring(0, 50));
+		saveMessageFile(message,openmrsEncounter.getEncounterId(), ackDate);
+		
+		return true;
 	}
 	
 	/**

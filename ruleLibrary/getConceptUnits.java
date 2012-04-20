@@ -63,7 +63,8 @@ public class getConceptUnits implements Rule
 	public Result eval(LogicContext context, Patient patient,
 			Map<String, Object> parameters) throws LogicException
 	{
-	    String conceptName = (String) parameters.get("param1");
+	    System.out.println("getConceptUnits()parameters: "+parameters);
+    	String conceptName = (String) parameters.get("param1");
     	Result result = new Result();
     	
     	ConceptService conceptService = Context.getConceptService();
