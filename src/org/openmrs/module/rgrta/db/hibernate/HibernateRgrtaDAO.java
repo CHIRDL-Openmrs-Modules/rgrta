@@ -642,10 +642,12 @@ public class HibernateRgrtaDAO implements RgrtaDAO
 	
 	public List <RgrtaHL7Export> getPendingHL7Exports(){
 		
-		
+		// pending messages in queue and messages with status of
+		//open_socket_failed
 		SQLQuery qry = this.sessionFactory.getCurrentSession()
 			.createSQLQuery("select * from Rgrta_hl7_export " +
-		" where date_processed is null and voided = 0 and status = 1");
+		" where (date_processed is null and voided = 0 and status = 1) " +
+		" || status = 8 ");
 
 		qry.addEntity(RgrtaHL7Export.class);
 		List <RgrtaHL7Export> exports = qry.list();
