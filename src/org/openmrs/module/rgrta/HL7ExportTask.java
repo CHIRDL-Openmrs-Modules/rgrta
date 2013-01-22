@@ -36,13 +36,16 @@ import org.openmrs.Concept;
 import org.openmrs.Form;
 import org.openmrs.Location;
 import org.openmrs.LocationTag;
+import org.openmrs.Obs;
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
+import org.openmrs.Person;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.FormService;
 import org.openmrs.api.LocationService;
+import org.openmrs.api.ObsService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.atd.hibernateBeans.ATDError;
 import org.openmrs.module.atd.hibernateBeans.FormAttributeValue;
@@ -65,10 +68,10 @@ import org.openmrs.scheduler.TaskDefinition;
 import org.openmrs.scheduler.tasks.AbstractTask;
 
 import ca.uhn.hl7v2.HL7Exception;
+import ca.uhn.hl7v2.model.v25.datatype.ST;
+import ca.uhn.hl7v2.model.v25.datatype.XCN;
 import ca.uhn.hl7v2.model.v25.segment.OBX;
 import ca.uhn.hl7v2.model.v25.segment.PV1;
-import ca.uhn.hl7v2.model.v25.datatype.XCN;
-import ca.uhn.hl7v2.model.v25.datatype.ST;
 
 /**
  * Implementation of a task that process all form entry queues. NOTE: This class does not need to be
@@ -95,6 +98,7 @@ public class HL7ExportTask extends AbstractTask {
 	private String sendPing;
 	private boolean stop = false;
 	private Integer sleepAfterConnectError;
+	private String notMyPatientCName = "not_my_patient";
 	
 	/**
 	 * Default Constructor (Uses SchedulerConstants.username and SchedulerConstants.password
@@ -204,6 +208,7 @@ public class HL7ExportTask extends AbstractTask {
 		AdministrationService adminService = Context.getAdministrationService();
 		LocationService locService = Context.getLocationService();
 		ConceptService conceptService = Context.getConceptService();
+		ObsService obsService = Context.getObsService();
 		
 		try
 		{
@@ -338,7 +343,45 @@ public class HL7ExportTask extends AbstractTask {
 				log.error("Provider NPI is null for form instance: " + formInstance );
 				return true;
 			}
-			constructor.setAssignAuthority(identifier);
+			
+			//check for previous not_my_patient for this provider/patient
+			Integer thisProvider = openmrsEncounter.getProvider().getId();
+			boolean notMyPatient = false;
+			List<Person> persons = new ArrayList<Person>();
+			persons.add(patient);
+			List<Concept> concepts = new ArrayList<Concept>();
+			Concept notMyPatientConcept = conceptService.getConceptByName(notMyPatientCName);
+			concepts.add(notMyPatientConcept);
+			List<Obs> allObs = obsService.getObservations(persons, null, null, concepts, null, null, null, null, null, null, null, false);
+			for (Obs obs : allObs){
+				org.openmrs.Encounter enc= obs.getEncounter();
+				Person provider = enc.getProvider();
+				if (provider != null){
+					if (thisProvider == provider.getPersonId()){
+						notMyPatient = true;
+					}
+				}
+				
+			}
+		
+			if (notMyPatient){
+				rgrtaHl7Export.setStatus(RgrtaService.getRgrtaExportStatusByName("not_my_patient"));
+				RgrtaService.saveRgrtaHL7Export(rgrtaHl7Export);
+				ATDError ce = new ATDError("Error", "Hl7 Export", 
+						"Cannot export form instance " + formInstance 
+						+ ". This provider is not the patient's PCP.  " 
+						+ openmrsEncounter.getEncounterId(), 
+						null ,
+						 new Date(), sessionId);
+				atdService.saveError(ce);
+				
+				log.error("This provider is not the patient's PCP. Form Instance: " 
+						+  formInstance + " ProviderId: " 
+						+ openmrsEncounter.getProvider().getPersonId());
+				return true;
+			}
+			
+		constructor.setAssignAuthority(identifier);
 			
 		
 			if (!addOBXForTiff(constructor, openmrsEncounter , formInstance.getFormId(), null, 

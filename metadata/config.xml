@@ -6,7 +6,7 @@
 	<!-- Rgrta Module Properties -->
 	<id>rgrta</id>
 	<name>Rgrta</name>
-	<version>0.3</version>
+	<version>1.1</version>
 	<package>org.openmrs.module.@MODULE_ID@</package>
 	<author>Meena Sheley</author>
 	<description>
