@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE sqldiff PUBLIC "-//OpenMRS//DTD OpenMRS SQL Diff Config 1.0//EN" "http://resources.openmrs.org/doctype/sqldiff-1.0.dtd">
+
+<sqldiff version="1.0">
+	<help>
+		USE:
+			The diffs are ordered by datamodel version number.
+			The script can be run in a top down fashion and is
+			expected to not fail or overwrite old data
+		
+		EXPECT:
+			- "use business-database-name;" was called prior to
+			   calling this script
+	</help>
+<diff>
+		<version>1.2.3</version>
+		<author>Tammy Dugan</author>
+		<date>Jan 6, 2009</date>
+		<description>
+		Initial database setup.
+		</description>
+<sql>
+
+
+CREATE TABLE rgrta_statistics (
+  statistics_id int(11) NOT NULL auto_increment,
+  patient_id int(11) NOT NULL,
+  form_name varchar(255) NOT NULL,
+  rule_id int(11) default NULL,
+  form_instance_id int(11) NOT NULL,
+  encounter_id int(11) NOT NULL,
+  position int(11) default NULL,
+  answer varchar(255) default NULL,
+  answer_err varchar(255) default NULL,
+  printed_timestamp varchar(255) default NULL,
+  scanned_timestamp varchar(255) default NULL,
+  priority int(11) default NULL,
+  obsv_id int(11) default NULL,
+  language_response varchar(255) default NULL,
+  age_at_visit varchar(255) NOT NULL,
+  PRIMARY KEY  (statistics_id),
+  KEY stats_fk_pat (patient_id),
+  KEY stats_fk_rule (rule_id),
+  KEY stats_fk_encounter (encounter_id),
+  KEY stats_fk_obs (obsv_id),
+  CONSTRAINT stats_fk_pat FOREIGN KEY (patient_id) REFERENCES patient (patient_id),
+  CONSTRAINT stats_fk_rule FOREIGN KEY (rule_id) REFERENCES dss_rule (rule_id),
+  KEY rgrta_stat_idx_instance (form_name,form_instance_id),
+  KEY rgrta_stat_idx_encounter (encounter_id,form_name),
+  CONSTRAINT stats_fk_encounter FOREIGN KEY (encounter_id) REFERENCES encounter (encounter_id),
+  CONSTRAINT stats_fk_obs FOREIGN KEY (obsv_id) REFERENCES obs (obs_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE rgrta_study (
+  study_id int(11) NOT NULL auto_increment,
+  start_date date default NULL,
+  end_date date default NULL,
+  title varchar(255) NOT NULL,
+  investigators varchar(255) default NULL,
+  study_concept_id int(11) NOT NULL,
+  status tinyint(1) NOT NULL default '0',
+  purpose varchar(255) default NULL,
+  PRIMARY KEY  (study_id),
+  KEY study_fk_concept (study_concept_id),
+  CONSTRAINT study_fk_concept FOREIGN KEY (study_concept_id) REFERENCES concept (concept_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE rgrta_study_attribute (
+  study_attribute_id int(11) NOT NULL auto_increment,
+  name varchar(255) NOT NULL,
+  description varchar(255) default NULL,
+  PRIMARY KEY  (study_attribute_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE rgrta_study_attribute_value (
+  study_attribute_value_id int(11) NOT NULL auto_increment,
+  study_id int(11) NOT NULL,
+  value varchar(255) NOT NULL,
+  study_attribute_id int(11) NOT NULL,
+  PRIMARY KEY  (study_attribute_value_id),
+  KEY study_value_fk_study (study_id),
+  KEY study_value_fk_attr (study_attribute_id),
+  CONSTRAINT study_value_fk_attr FOREIGN KEY (study_attribute_id) REFERENCES rgrta_study_attribute (study_attribute_id),
+  CONSTRAINT study_value_fk_study FOREIGN KEY (study_id) REFERENCES rgrta_study (study_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+INSERT INTO atd_program
+   (`name`,`version`)
+VALUES
+   ('rgrta', '1.0');
+   
+INSERT INTO atd_form_attribute
+   (`name`, `description`)
+VALUES
+   ('medRecNumberTag', 'XML tagname that contains the patient\'s medical record number within a form instance.');
+
+INSERT INTO atd_form_attribute
+   (`name`, `description`)
+VALUES
+   (', numQuestions', 'Number of Questions on the PSF form');
+
+INSERT INTO atd_form_attribute
+   (`name`, `description`)
+VALUES
+   ('numPrompts', 'Number of Prompts on the PWS form');
+   INSERT INTO atd_form_attribute
+   (`name`, `description`)
+VALUES
+   ('medRecNumberTag2', 'Alternate XML tagname that contains the patient\'s medical record number within a form instance.');
+
+INSERT INTO rgrta_study_attribute
+   (`name`, `description`)
+VALUES
+   ('Custom Randomizer', 'Custom randomization class');
+
+
+INSERT INTO scheduler_task_config
+   (`name`, `schedulable_class`, `start_time_pattern`, `repeat_interval`, `start_on_startup`, `started`, `created_by`, `date_created`)
+select 'McKessonCheckinProcessor', 'org.openmrs.module.rgrta.hl7.mckesson.CheckinProcessor', 
+'MM/dd/yyyy HH:mm:ss', 86400000, 1, 0, 1,NOW() from 
+(select count(*) as cnt from scheduler_task_config where name='McKessonCheckinProcessor') a
+where a.cnt=0;
+
+   INSERT INTO scheduler_task_config_property
+   (`name`, `value`, `task_config_id`)
+select a.* from 
+(select 'port', '5002', max(task_config_id) from scheduler_task_config where name='McKessonCheckinProcessor')a,
+(select count(*) as cnt from scheduler_task_config_property where name='port'
+and task_config_id=(select max(task_config_id) from scheduler_task_config where name='McKessonCheckinProcessor') )b
+where b.cnt=0;
+
+INSERT INTO patient_identifier_type
+   (`name`, `description`,  `check_digit`, `creator`, `date_created`,`validator`)
+select 'SSN', 'social security number',  1, 1, NOW(), 'org.openmrs.module.rgrta.hl7.SSNValidator' from 
+(select count(*) as cnt from patient_identifier_type where name='SSN') a
+where a.cnt=0;
+   
+INSERT INTO person_attribute_type
+   (`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+select 'SSN', 'social security number', 'java.lang.String',0, 1, NOW() from 
+(select count(*) as cnt from person_attribute_type where name='SSN') a
+where a.cnt=0;
+
+INSERT INTO person_attribute_type
+   (`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+select 'Mother\'s maiden name', 'mother\'s maiden name', 'java.lang.String', 1, 1, NOW() from 
+(select count(*) as cnt from person_attribute_type where name='Mother\'s maiden name') a
+where a.cnt=0;
+
+INSERT INTO person_attribute_type
+   (`name`, `description`, `format`,`searchable`, `creator`, `date_created`)
+select 'Civil Status', 'marital status', 'java.lang.String', 1, 1, NOW() from 
+(select count(*) as cnt from person_attribute_type where name='Civil Status') a
+where a.cnt=0;
+
+INSERT INTO person_attribute_type
+   (`name`, `description`, `format`,`searchable`, `creator`, `date_created`)
+select 'Religion', 'religion', 'java.lang.String', 1, 1, NOW() from 
+(select count(*) as cnt from person_attribute_type where name='Religion') a
+where a.cnt=0;
+
+
+
+
+</sql>
+</diff>
+
+
+<diff>
+		<version>1.2.5</version>
+		<author>Tammy Dugan</author>
+		<date>Jan 13, 2009</date>
+		<description>
+		Added "Other" provider. Remove the Provider role from the admin user so it 
+		doesn't show up as a provider in the manual checkin.
+		</description>
+<sql>
+
+
+INSERT INTO `person`
+(creator,date_created)
+values( 1, NOW() );
+
+INSERT INTO `users`
+(user_id,system_id,creator,date_created,username)
+select a.* from 
+(
+select max(person_id), '2-6','1', NOW(),'.Other.' from person
+)a,
+(select count(*) as cnt from users where username='.Other.')b
+where b.cnt=0;
+
+INSERT INTO `person_name` 
+(person_id,family_name,creator,date_created)
+select a.* from 
+(select max(user_id),'Other',1, NOW() from users where system_id='2-6')a,
+(select count(*) as cnt from person_name where family_name='Other' and person_id=(select max(user_id) from users where system_id='2-6'))b
+where b.cnt=0;
+
+INSERT INTO `user_role` 
+select a.* from 
+(select max(user_id),'Provider' from users where system_id='2-6')a,
+(select count(*) as cnt from user_role where user_id=(select max(user_id) from users where system_id='2-6'))b
+where b.cnt=0;
+
+</sql>
+</diff>
+
+<diff>
+		<version>1.2.7</version>
+		<author>Meena Sheley</author>
+		<date>Feb 18, 2009</date>
+		<description>
+		Adding encounter types for manual checkins and hl7 checkins
+		if the encounter_types do not already exist in the table
+		</description>
+<sql>
+
+INSERT into encounter_type  (name, description, creator, date_created)
+(select  distinct 'HL7Message','Arrival from HL7 message', 1, NOW() 
+from encounter_type
+WHERE 
+'HL7Message'  NOT IN (SELECT name FROM encounter_type where name = 'HL7Message'));
+
+INSERT into encounter_type  (name, description, creator, date_created)
+(select  distinct 'ManualCheckin','Patient checked in manually', 1, NOW() 
+from encounter_type
+WHERE 
+'ManualCheckin'  NOT IN (SELECT name FROM encounter_type where name = 'ManualCheckin'));
+
+</sql>
+</diff>
+
+
+
+
+
+
+	   <diff>
+		<version>1.3.0</version>
+		<author>Vibha Anand</author>
+		<date>Apr 3, 2009</date>
+		<description>
+		Added a Cron job to update the voided column of user who is a provider and is inactive.
+		</description>
+	<sql>
+	INSERT INTO scheduler_task_config
+   (`name`, `schedulable_class`, `start_time`, `start_time_pattern`, `repeat_interval`, `start_on_startup`, `started`, `created_by`, `date_created`)
+select 'Cron job retiring Inactive Providers', 'org.openmrs.module.rgrta.RgrtaProvidersCron', 
+NOW(), 'MM/dd/yyyy HH:mm:ss',86400, 1, 0, 1, NOW() from 
+(select count(*) as cnt from scheduler_task_config where name='Cron job retiring Inactive Providers') a
+where a.cnt=0;
+	
+	</sql>
+	</diff>
+	
+	<diff>
+		<version>1.3.4</version>
+		<author>Tammy Dugan</author>
+		<date>June 11, 2009</date>
+		<description>
+		Update time that cron job runs to 1am
+		</description>
+	<sql>	
+	update scheduler_task_config
+set start_time='2009-06-01 01:00:00'
+where name in ('Cron job retiring Inactive Providers')
+</sql>
+	</diff>
+
+
+	
+	<diff>
+		<version>1.3.7</version>
+		<author>Meena Sheley</author>
+		<date>October 6, 2009</date>
+		<description>
+		Added hl7 export functionality
+		</description>
+	<sql>
+		
+		INSERT INTO `scheduler_task_config` ( name, description, schedulable_class, start_time,
+		start_time_pattern, repeat_interval, start_on_startup, started, date_created, created_by)
+		values
+		 ('HL7Exporter', 'Task to export outbound hl7 to RMRS',
+		 'org.openmrs.module.rgrta.hl7.mckesson.HL7Exporter', null,
+		 'MM/dd/yyyy HH:mm:ss', '86400', '0', '0', now(), '1');
+		 
+		INSERT INTO `scheduler_task_config_property` (name, value, task_config_id)
+		VALUES ('port', '', (select task_config_id from scheduler_task_config
+		where name like 'HL7Exporter'));
+
+		
+
+	</sql>
+	</diff>
+	
+	<diff>
+		<version>1.3.8</version>
+		<author>Tammy Dugan</author>
+		<date>Oct 7, 2009</date>
+		<description>
+		Scripts to support multiple locations.
+		</description>
+	<sql>
+		
+	update atd_program
+set start_state=(select state_id from atd_state where name='CHECKIN'),
+end_state=(select state_id from atd_state where name='FINISHED')
+where name='rgrta';
+		alter table rgrta_statistics add column location_tag_id int NOT NULL default 1;
+	    	alter table rgrta_statistics add CONSTRAINT rgrta_stat_fk_loc_tag FOREIGN KEY (location_tag_id) REFERENCES location_tag (location_tag_id);
+		
+		alter table rgrta_statistics add column location_id int NOT NULL default 1;
+	    	alter table rgrta_statistics add CONSTRAINT rgrta_stat_fk_loc FOREIGN KEY (location_id) REFERENCES location (location_id);
+		
+		insert into atd_error_category
+			select * from rgrta_error_category;
+
+insert into atd_error(error_id,error_category_id,level,session_id,message,details,date_time)
+select * from rgrta_error;
+
+
+
+alter table rgrta_location_tag_attribute_value add column location_id int NOT NULL default 1;
+alter table rgrta_location_tag_attribute_value add CONSTRAINT rgrta_loc_tag_att_fk_loc 
+FOREIGN KEY (location_id) REFERENCES location (location_id);
+
+CREATE TABLE `rgrta_location_attribute` (
+  `location_attribute_id` int(11) NOT NULL auto_increment,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(255) default NULL,
+  PRIMARY KEY  (`location_attribute_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `rgrta_location_attribute_value` (
+  `location_attribute_value_id` int(11) NOT NULL auto_increment,
+  `location_id` int(11) NOT NULL,
+  `value` varchar(255) NOT NULL,
+  `location_attribute_id` int(11) NOT NULL,
+  PRIMARY KEY  (`location_attribute_value_id`),
+  KEY `location_value_fk_attr` (`location_attribute_id`),
+  KEY `loc_att_fk_loc` (`location_id`),
+  CONSTRAINT `rgrta_loc_att_fk_loc` FOREIGN KEY (`location_id`) REFERENCES `location` (`location_id`),
+  CONSTRAINT `location_value_fk_attr` FOREIGN KEY (`location_attribute_id`) REFERENCES `rgrta_location_attribute` (`location_attribute_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+INSERT INTO `rgrta_location_attribute`(name,description)
+ VALUES ('pagerMessage', 'Message sent to support pager ');
+
+INSERT INTO `rgrta_location_attribute`(name,description)
+ VALUES ('clinicPhone', 'Contact phone number for the clinic.');
+
+   INSERT INTO atd_form_attribute
+   (`name`, `description`)
+VALUES
+   ('defaultPrinter', 'Default printer for a given printer location.');
+   
+      INSERT INTO atd_form_attribute
+   (`name`, `description`)
+VALUES
+   ('alternatePrinter', 'Alternate printer for a given printer location.');
+   
+      INSERT INTO atd_form_attribute
+   (`name`, `description`)
+VALUES
+   (', useAlternatePrinter', 'Flag used to indicate when alternate printer should be used.');
+
+	DROP TABLE IF EXISTS `atd_state`;
+
+CREATE TABLE `atd_state` (
+  `state_id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `state_action_id` int(11) DEFAULT NULL,
+  `date_changed` datetime DEFAULT NULL,
+  `changed_by` int(11) DEFAULT NULL,
+  `date_created` datetime DEFAULT NULL,
+  `creator` int(11) DEFAULT NULL,
+  `form_name` varchar(40) DEFAULT NULL,
+  PRIMARY KEY (`state_id`),
+  KEY `state_fk_action` (`state_action_id`),
+  KEY `state_fk_creator` (`creator`),
+  KEY `state_fk_changed` (`changed_by`),
+  CONSTRAINT `state_fk_action` FOREIGN KEY (`state_action_id`) REFERENCES `atd_state_action` (`state_action_id`),
+  CONSTRAINT `state_fk_changed` FOREIGN KEY (`changed_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `state_fk_creator` FOREIGN KEY (`creator`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8;
+
+LOCK TABLES `atd_state` WRITE;
+/*!40000 ALTER TABLE `atd_state` DISABLE KEYS */;
+INSERT INTO `atd_state` VALUES (1,'JIT',NULL,2,NULL,NULL,NULL,NULL,NULL),
+(2,'CHECKIN',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(3,'FINISHED',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(4,'ErrorState',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(10,'Randomize',NULL,6,NULL,NULL,NULL,NULL,NULL),
+(20,'QUERY KITE Alias',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(21,'Clinic Registration',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(22,'Process Checkin HL7',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(23,'Export',NULL,10,NULL,NULL,NULL,NULL,NULL),
+(24,'Query medication list',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(25,'Export POC',NULL,10,NULL,NULL,NULL,NULL,NULL),
+(26,'JIT_create',NULL,1,NULL,NULL,NULL,NULL,NULL),
+(27,'JIT_printed',NULL,3,NULL,NULL,NULL,NULL,NULL),
+(28,'JIT_wait_to_scan',NULL,4,NULL,NULL,NULL,NULL,NULL),
+(29,'JIT_process',NULL,5,NULL,NULL,NULL,NULL,NULL),
+(30,'JIT_rescan',NULL,9,NULL,NULL,NULL,NULL,NULL),
+(31,'JIT_FINISHED',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(32,'JIT_reprint',NULL,8,NULL,NULL,NULL,NULL,NULL),
+(33,'JIT_incomplete',NULL,NULL,NULL,NULL,NULL,NULL,NULL),
+(34,'RTA_create',NULL,11,NULL,NULL,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `atd_state` ENABLE KEYS */;
+UNLOCK TABLES;
+
+DROP TABLE IF EXISTS `atd_state_action`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `atd_state_action` (
+  `state_action_id` int(11) NOT NULL AUTO_INCREMENT,
+  `action_name` varchar(255) NOT NULL,
+  `action_description` varchar(255) DEFAULT NULL,
+  `date_changed` datetime DEFAULT NULL,
+  `changed_by` int(11) DEFAULT NULL,
+  `date_created` datetime DEFAULT NULL,
+  `creator` int(11) DEFAULT NULL,
+  `action_class` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`state_action_id`),
+  KEY `state_action_fk_creator` (`creator`),
+  KEY `state_action_fk_changed` (`changed_by`),
+  CONSTRAINT `state_action_fk_changed` FOREIGN KEY (`changed_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `state_action_fk_creator` FOREIGN KEY (`creator`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8;
+
+
+LOCK TABLES `atd_state_action` WRITE;
+
+INSERT INTO `atd_state_action` VALUES (1,'PRODUCE FORM INSTANCE','Creating teleform xml',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.ProduceFormInstance'),
+(2,'PRODUCE JIT','Creates a Just In Time handout along with form',NULL,NULL,NULL,NULL,'org.openmrs.module.atd.action.ProduceJIT'),
+(3,'WAIT FOR PRINT','Waiting for teleform to print xml file',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.WaitForPrint'),
+(4,'WAIT FOR SCAN','Waiting for person to scan printed telform form back',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.WaitForScan'),
+(5,'CONSUME FORM INSTANCE','Processing scanned teleform form xml',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.ConsumeFormInstance'),
+(6,'RANDOMIZE','Randomize patient to given study',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.Randomize'),
+(7,'QUERY KITE','Query kite.regenstrief.org for patient information',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.QueryKite'),
+(8,'REPRINT','Reprints a form',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.Reprint'),
+(9,'RESCAN','Rescans and processes a form',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.Rescan'),
+(10,'LOAD HL7 EXPORT QUEUE','Loads a queue for sending results to Regenstrief',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.LoadHL7ExportQueue'),
+(11,'PRODUCE ALERT','Produce real time alert to providers',NULL,NULL,NULL,NULL,'org.openmrs.module.rgrta.action.ProduceAlert');
+UNLOCK TABLES;
+
+DROP TABLE IF EXISTS `atd_state_mapping`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `atd_state_mapping` (
+  `initial_state` int(11) NOT NULL,
+  `next_state` int(11) NOT NULL,
+  `state_mapping_id` int(11) NOT NULL AUTO_INCREMENT,
+  `date_changed` datetime DEFAULT NULL,
+  `changed_by` int(11) DEFAULT NULL,
+  `date_created` datetime DEFAULT NULL,
+  `creator` int(11) DEFAULT NULL,
+  `program_id` int(11) NOT NULL,
+  PRIMARY KEY (`state_mapping_id`),
+  KEY `state_map_fk_initial` (`initial_state`),
+  KEY `state_map_fk_next` (`next_state`),
+  KEY `state_map_fk_program` (`program_id`),
+  KEY `state_map_fk_creator` (`creator`),
+  KEY `state_map_fk_changed` (`changed_by`),
+  CONSTRAINT `state_map_fk_changed` FOREIGN KEY (`changed_by`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `state_map_fk_creator` FOREIGN KEY (`creator`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `state_map_fk_initial` FOREIGN KEY (`initial_state`) REFERENCES `atd_state` (`state_id`),
+  CONSTRAINT `state_map_fk_next` FOREIGN KEY (`next_state`) REFERENCES `atd_state` (`state_id`),
+  CONSTRAINT `state_map_fk_program` FOREIGN KEY (`program_id`) REFERENCES `atd_program` (`program_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8;
+
+
+
+INSERT INTO scheduler_task_config
+   (`name`, `schedulable_class`, `start_time_pattern`, `repeat_interval`, `start_on_startup`, `started`, `created_by`, `date_created`)
+select 'PccCheckinProcessor', 'org.openmrs.module.rgrta.hl7.mckesson.CheckinProcessor', 
+'MM/dd/yyyy HH:mm:ss', 86400000, 1, 0, 1,NOW() from 
+(select count(*) as cnt from scheduler_task_config where name='PccCheckinProcessor') a
+where a.cnt=0;
+
+   INSERT INTO scheduler_task_config_property
+   (`name`, `value`, `task_config_id`)
+select a.* from 
+(select 'port', '5001', max(task_config_id) from scheduler_task_config where name='PccCheckinProcessor')a,
+(select count(*) as cnt from scheduler_task_config_property where name='port'
+and task_config_id=(select max(task_config_id) from scheduler_task_config where name='PccCheckinProcessor') )b
+where b.cnt=0;
+	</sql>
+	</diff>
+	<diff>
+		<version>1.4.3</version>
+		<author>Meena Sheley</author>
+		<date>Jan 07, 2010</date>
+		<description>
+		Add tables for export
+		</description>
+	<sql>
+	
+	
+	DROP TABLE IF EXISTS `rgrta`.`rgrta_hl7_export_status`;
+	CREATE TABLE  `rgrta`.`rgrta_hl7_export_status` (
+	  `hl7_export_status_id` int(11) NOT NULL,
+	  `name` varchar(200) DEFAULT NULL,
+	  `description` varchar(200) DEFAULT NULL,
+	  `date_created` datetime DEFAULT NULL,
+	  PRIMARY KEY (`hl7_export_status_id`),
+	  KEY `rgrta_hl7_export_status_id` (`hl7_export_status_id`) USING BTREE
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `rgrta`.`rgrta_hl7_export`;
+CREATE TABLE  `rgrta`.`rgrta_hl7_export` (
+	  `queue_id` int(11) NOT NULL AUTO_INCREMENT,
+	  `encounter_id` int(11) NOT NULL,
+	  `status` int(11) NOT NULL DEFAULT '1',
+	  `date_inserted` datetime NOT NULL DEFAULT '0002-11-30 00:00:00',
+	  `date_processed` datetime DEFAULT NULL,
+	  `ack_date` datetime DEFAULT NULL,
+	  `voided` smallint(6) NOT NULL DEFAULT '0',
+	  `date_voided` datetime DEFAULT NULL,
+	  PRIMARY KEY (`queue_id`),
+	  KEY `FK_rgrta_hl7_export_1` (`status`),
+	  KEY `rgrta_hl7_export_fk_encounter` (`encounter_id`),
+	  CONSTRAINT `rgrta_hl7_export_fk_encounter` FOREIGN KEY (`encounter_id`) REFERENCES `encounter` (`encounter_id`),
+	  CONSTRAINT `rgrta_hl7_export_ibfk_1` FOREIGN KEY (`status`) REFERENCES `rgrta_hl7_export_status` (`hl7_export_status_id`)
+	) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=latin1;
+
+
+	DROP TABLE IF EXISTS `rgrta`.`rgrta_hl7_export_map`;
+	CREATE TABLE  `rgrta`.`rgrta_hl7_export_map` (
+	  `hl7_export_map_id` int(11) NOT NULL AUTO_INCREMENT,
+	  `hl7_export_queue_id` int(11) NOT NULL,
+	  `value` varchar(255) NOT NULL,
+	  `date_inserted` datetime NOT NULL DEFAULT '0002-11-30 00:00:00',
+	  `voided` smallint(6) NOT NULL DEFAULT '0',
+	  `date_voided` datetime DEFAULT NULL,
+	  PRIMARY KEY (`hl7_export_map_id`)
+	) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8;
+	</sql>
+    </diff>
+
+	<diff>
+        <version>1.4.4</version>
+        <author>Meena Sheley</author>
+        <date>May 11, 2011</date>
+        <description>
+        Add the ability to fax JITs
+        </description>
+    <sql>
+    insert into atd_state_action (action_name,action_description,action_class) 
+    values ('FAX JIT','Faxes any applicable JIT','org.openmrs.module.chica.action.FaxJIT');
+    
+    insert into atd_state (name,state_action_id) 
+    values ('JIT_fax',(select state_action_id from atd_state_action where action_name = 'FAX JIT'));
+    
+    insert into atd_state_mapping (initial_state,next_state,program_id) 
+    values (
+       (select state_id from atd_state where name = 'JIT_fax')
+      ,(select state_id from atd_state where name = 'JIT_wait_to_scan')
+      ,(select program_id from atd_program where name = 'rgrta'));
+      
+    update atd_state_mapping set next_state = (select state_id from atd_state where name = 'JIT_fax')
+    where initial_state = (select state_id from atd_state where name = 'JIT_printed');
+    
+    insert into atd_form_attribute (name, description) 
+    values ('auto-fax', 'Flag to indicate if a form should be faxed.');
+    
+    insert into atd_form_attribute_value (form_id, value, form_attribute_id, location_tag_id, location_id) 
+    select a.form_id, 'false', (select form_attribute_id from atd_form_attribute where name = 'auto-fax'), 
+    c.location_tag_id, c.location_id from form a, location_tag_map c, location b 
+    where a.retired=0 and c.location_id=b.location_id group by a.form_id, c.location_tag_id, c.location_id;
+    
+    insert into chirdlutil_location_attribute (name, description) 
+    values ('clinicFaxNumber', 'Clinic fax number where applicable forms will be routed');
+    
+    insert into chirdlutil_location_attribute_value (location_id, value, location_attribute_id) 
+    select a.location_id, '', (select location_attribute_id from chirdlutil_location_attribute where name='clinicFaxNumber')
+    from location a;
+    
+    insert into chirdlutil_location_attribute (name, description) 
+    values ('clinicFaxReceiver', 'The person, group, or general area that will receive faxes');
+    
+    insert into chirdlutil_location_attribute_value (location_id, value, location_attribute_id) 
+    select a.location_id, 'Clinical Staff', (select location_attribute_id from chirdlutil_location_attribute where name='clinicFaxReceiver')
+    from location a;
+    </sql>
+    </diff>
+	<diff>
+        <version>1.4.5</version>
+        <author>Meena Sheley</author>
+        <date>Oct 11, 2011</date>
+        <description>
+        ATD statistics table
+        </description>
+    <sql>
+	
+	CREATE TABLE `atd_statistics` (
+  `statistics_id` int(11) NOT NULL AUTO_INCREMENT,
+  `patient_id` int(11) NOT NULL,
+  `form_name` varchar(255) NOT NULL,
+  `rule_id` int(11) DEFAULT NULL,
+  `form_instance_id` int(11) NOT NULL,
+  `encounter_id` int(11) NOT NULL,
+  `position` int(11) DEFAULT NULL,
+  `answer` varchar(255) DEFAULT NULL,
+  `answer_err` varchar(255) DEFAULT NULL,
+  `printed_timestamp` varchar(255) DEFAULT NULL,
+  `scanned_timestamp` varchar(255) DEFAULT NULL,
+  `priority` int(11) DEFAULT NULL,
+  `obsv_id` int(11) DEFAULT NULL,
+  `language_response` varchar(255) DEFAULT NULL,
+  `age_at_visit` varchar(255) NOT NULL,
+  `location_tag_id` int(11) NOT NULL DEFAULT '1',
+  `location_id` int(11) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`statistics_id`),
+  KEY `stats_fk_pat` (`patient_id`),
+  KEY `stats_fk_rule` (`rule_id`),
+  KEY `stats_fk_encounter` (`encounter_id`),
+  KEY `stats_fk_obs` (`obsv_id`),
+  KEY `atd_stat_fk_loc_tag` (`location_tag_id`),
+  KEY `atd_stat_idx_instance` (`location_id`,`form_name`,`form_instance_id`),
+  KEY `atd_stat_idx_encounter` (`encounter_id`,`form_name`),
+  CONSTRAINT `atd_stat_fk_loc1` FOREIGN KEY (`location_id`) REFERENCES `location` (`location_id`),
+  CONSTRAINT `atd_stat_fk_loc_tag1` FOREIGN KEY (`location_tag_id`) REFERENCES `location_tag` (`location_tag_id`),
+  CONSTRAINT `stats_fk_encounter1` FOREIGN KEY (`encounter_id`) REFERENCES `encounter` (`encounter_id`),
+  CONSTRAINT `stats_fk_obs1` FOREIGN KEY (`obsv_id`) REFERENCES `obs` (`obs_id`),
+  CONSTRAINT `stats_fk_pat1` FOREIGN KEY (`patient_id`) REFERENCES `patient` (`patient_id`),
+  CONSTRAINT `stats_fk_rule1` FOREIGN KEY (`rule_id`) REFERENCES `dss_rule` (`rule_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2891 DEFAULT CHARSET=utf8;
+	</sql>
+	</diff>
+	
+</sqldiff>
+
+
