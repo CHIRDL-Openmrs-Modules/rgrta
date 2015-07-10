@@ -139,8 +139,8 @@
 	<classpathentry kind="lib" path="lib-common/axis2/XmlSchema-LICENSE.txt"/>
 	<classpathentry kind="lib" path="lib-common/dss-2.29.1.jar" sourcepath="/dss/src"/>
 	<classpathentry kind="lib" path="lib-common/hl7api/hapi-0.5.jar" sourcepath="/HAPI/src/uhn/hl7v2/model/v25"/>
-	<classpathentry kind="lib" path="lib-common/chirdlutil-1.8.2.jar" sourcepath="/chirdlutil/src"/>
-	<classpathentry kind="lib" path="lib-common/atd-2.1.1.jar" sourcepath="/atd/src"/>
+	<classpathentry kind="lib" path="lib-common/chirdlutil-1.8.4.jar" sourcepath="/chirdlutil/src"/>
+	<classpathentry kind="lib" path="lib-common/atd-2.1.2.jar" sourcepath="/atd/src"/>
 	<classpathentry kind="lib" path="lib-common/sockethl7listener-1.3.34.jar" sourcepath="/sockethl7listener/src"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
